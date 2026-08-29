@@ -1,0 +1,494 @@
+{
+  "Album": {
+    "table": "Album",
+    "columns": [
+      {
+        "name": "AlbumId",
+        "type": "INTEGER",
+        "is_pk": true
+      },
+      {
+        "name": "Title",
+        "type": "NVARCHAR(160)",
+        "is_pk": false
+      },
+      {
+        "name": "ArtistId",
+        "type": "INTEGER",
+        "is_pk": false,
+        "is_fk": true,
+        "references": "Artist.ArtistId"
+      }
+    ],
+    "foreign_keys": [
+      {
+        "from_column": "ArtistId",
+        "to_table": "Artist",
+        "to_column": "ArtistId"
+      }
+    ],
+    "row_count": 347,
+    "description": null
+  },
+  "Artist": {
+    "table": "Artist",
+    "columns": [
+      {
+        "name": "ArtistId",
+        "type": "INTEGER",
+        "is_pk": true
+      },
+      {
+        "name": "Name",
+        "type": "NVARCHAR(120)",
+        "is_pk": false
+      }
+    ],
+    "foreign_keys": [],
+    "row_count": 275,
+    "description": null
+  },
+  "Customer": {
+    "table": "Customer",
+    "columns": [
+      {
+        "name": "CustomerId",
+        "type": "INTEGER",
+        "is_pk": true
+      },
+      {
+        "name": "FirstName",
+        "type": "NVARCHAR(40)",
+        "is_pk": false
+      },
+      {
+        "name": "LastName",
+        "type": "NVARCHAR(20)",
+        "is_pk": false
+      },
+      {
+        "name": "Company",
+        "type": "NVARCHAR(80)",
+        "is_pk": false
+      },
+      {
+        "name": "Address",
+        "type": "NVARCHAR(70)",
+        "is_pk": false
+      },
+      {
+        "name": "City",
+        "type": "NVARCHAR(40)",
+        "is_pk": false
+      },
+      {
+        "name": "State",
+        "type": "NVARCHAR(40)",
+        "is_pk": false
+      },
+      {
+        "name": "Country",
+        "type": "NVARCHAR(40)",
+        "is_pk": false
+      },
+      {
+        "name": "PostalCode",
+        "type": "NVARCHAR(10)",
+        "is_pk": false
+      },
+      {
+        "name": "Phone",
+        "type": "NVARCHAR(24)",
+        "is_pk": false
+      },
+      {
+        "name": "Fax",
+        "type": "NVARCHAR(24)",
+        "is_pk": false
+      },
+      {
+        "name": "Email",
+        "type": "NVARCHAR(60)",
+        "is_pk": false
+      },
+      {
+        "name": "SupportRepId",
+        "type": "INTEGER",
+        "is_pk": false,
+        "is_fk": true,
+        "references": "Employee.EmployeeId"
+      }
+    ],
+    "foreign_keys": [
+      {
+        "from_column": "SupportRepId",
+        "to_table": "Employee",
+        "to_column": "EmployeeId"
+      }
+    ],
+    "row_count": 59,
+    "description": null
+  },
+  "Employee": {
+    "table": "Employee",
+    "columns": [
+      {
+        "name": "EmployeeId",
+        "type": "INTEGER",
+        "is_pk": true
+      },
+      {
+        "name": "LastName",
+        "type": "NVARCHAR(20)",
+        "is_pk": false
+      },
+      {
+        "name": "FirstName",
+        "type": "NVARCHAR(20)",
+        "is_pk": false
+      },
+      {
+        "name": "Title",
+        "type": "NVARCHAR(30)",
+        "is_pk": false
+      },
+      {
+        "name": "ReportsTo",
+        "type": "INTEGER",
+        "is_pk": false,
+        "is_fk": true,
+        "references": "Employee.EmployeeId"
+      },
+      {
+        "name": "BirthDate",
+        "type": "DATETIME",
+        "is_pk": false
+      },
+      {
+        "name": "HireDate",
+        "type": "DATETIME",
+        "is_pk": false
+      },
+      {
+        "name": "Address",
+        "type": "NVARCHAR(70)",
+        "is_pk": false
+      },
+      {
+        "name": "City",
+        "type": "NVARCHAR(40)",
+        "is_pk": false
+      },
+      {
+        "name": "State",
+        "type": "NVARCHAR(40)",
+        "is_pk": false
+      },
+      {
+        "name": "Country",
+        "type": "NVARCHAR(40)",
+        "is_pk": false
+      },
+      {
+        "name": "PostalCode",
+        "type": "NVARCHAR(10)",
+        "is_pk": false
+      },
+      {
+        "name": "Phone",
+        "type": "NVARCHAR(24)",
+        "is_pk": false
+      },
+      {
+        "name": "Fax",
+        "type": "NVARCHAR(24)",
+        "is_pk": false
+      },
+      {
+        "name": "Email",
+        "type": "NVARCHAR(60)",
+        "is_pk": false
+      }
+    ],
+    "foreign_keys": [
+      {
+        "from_column": "ReportsTo",
+        "to_table": "Employee",
+        "to_column": "EmployeeId"
+      }
+    ],
+    "row_count": 8,
+    "description": null
+  },
+  "Genre": {
+    "table": "Genre",
+    "columns": [
+      {
+        "name": "GenreId",
+        "type": "INTEGER",
+        "is_pk": true
+      },
+      {
+        "name": "Name",
+        "type": "NVARCHAR(120)",
+        "is_pk": false
+      }
+    ],
+    "foreign_keys": [],
+    "row_count": 25,
+    "description": null
+  },
+  "Invoice": {
+    "table": "Invoice",
+    "columns": [
+      {
+        "name": "InvoiceId",
+        "type": "INTEGER",
+        "is_pk": true
+      },
+      {
+        "name": "CustomerId",
+        "type": "INTEGER",
+        "is_pk": false,
+        "is_fk": true,
+        "references": "Customer.CustomerId"
+      },
+      {
+        "name": "InvoiceDate",
+        "type": "DATETIME",
+        "is_pk": false
+      },
+      {
+        "name": "BillingAddress",
+        "type": "NVARCHAR(70)",
+        "is_pk": false
+      },
+      {
+        "name": "BillingCity",
+        "type": "NVARCHAR(40)",
+        "is_pk": false
+      },
+      {
+        "name": "BillingState",
+        "type": "NVARCHAR(40)",
+        "is_pk": false
+      },
+      {
+        "name": "BillingCountry",
+        "type": "NVARCHAR(40)",
+        "is_pk": false
+      },
+      {
+        "name": "BillingPostalCode",
+        "type": "NVARCHAR(10)",
+        "is_pk": false
+      },
+      {
+        "name": "Total",
+        "type": "NUMERIC(10,2)",
+        "is_pk": false
+      }
+    ],
+    "foreign_keys": [
+      {
+        "from_column": "CustomerId",
+        "to_table": "Customer",
+        "to_column": "CustomerId"
+      }
+    ],
+    "row_count": 412,
+    "description": null
+  },
+  "InvoiceLine": {
+    "table": "InvoiceLine",
+    "columns": [
+      {
+        "name": "InvoiceLineId",
+        "type": "INTEGER",
+        "is_pk": true
+      },
+      {
+        "name": "InvoiceId",
+        "type": "INTEGER",
+        "is_pk": false,
+        "is_fk": true,
+        "references": "Invoice.InvoiceId"
+      },
+      {
+        "name": "TrackId",
+        "type": "INTEGER",
+        "is_pk": false,
+        "is_fk": true,
+        "references": "Track.TrackId"
+      },
+      {
+        "name": "UnitPrice",
+        "type": "NUMERIC(10,2)",
+        "is_pk": false
+      },
+      {
+        "name": "Quantity",
+        "type": "INTEGER",
+        "is_pk": false
+      }
+    ],
+    "foreign_keys": [
+      {
+        "from_column": "TrackId",
+        "to_table": "Track",
+        "to_column": "TrackId"
+      },
+      {
+        "from_column": "InvoiceId",
+        "to_table": "Invoice",
+        "to_column": "InvoiceId"
+      }
+    ],
+    "row_count": 2240,
+    "description": null
+  },
+  "MediaType": {
+    "table": "MediaType",
+    "columns": [
+      {
+        "name": "MediaTypeId",
+        "type": "INTEGER",
+        "is_pk": true
+      },
+      {
+        "name": "Name",
+        "type": "NVARCHAR(120)",
+        "is_pk": false
+      }
+    ],
+    "foreign_keys": [],
+    "row_count": 5,
+    "description": null
+  },
+  "Playlist": {
+    "table": "Playlist",
+    "columns": [
+      {
+        "name": "PlaylistId",
+        "type": "INTEGER",
+        "is_pk": true
+      },
+      {
+        "name": "Name",
+        "type": "NVARCHAR(120)",
+        "is_pk": false
+      }
+    ],
+    "foreign_keys": [],
+    "row_count": 18,
+    "description": null
+  },
+  "PlaylistTrack": {
+    "table": "PlaylistTrack",
+    "columns": [
+      {
+        "name": "PlaylistId",
+        "type": "INTEGER",
+        "is_pk": true,
+        "is_fk": true,
+        "references": "Playlist.PlaylistId"
+      },
+      {
+        "name": "TrackId",
+        "type": "INTEGER",
+        "is_pk": true,
+        "is_fk": true,
+        "references": "Track.TrackId"
+      }
+    ],
+    "foreign_keys": [
+      {
+        "from_column": "TrackId",
+        "to_table": "Track",
+        "to_column": "TrackId"
+      },
+      {
+        "from_column": "PlaylistId",
+        "to_table": "Playlist",
+        "to_column": "PlaylistId"
+      }
+    ],
+    "row_count": 8715,
+    "description": null
+  },
+  "Track": {
+    "table": "Track",
+    "columns": [
+      {
+        "name": "TrackId",
+        "type": "INTEGER",
+        "is_pk": true
+      },
+      {
+        "name": "Name",
+        "type": "NVARCHAR(200)",
+        "is_pk": false
+      },
+      {
+        "name": "AlbumId",
+        "type": "INTEGER",
+        "is_pk": false,
+        "is_fk": true,
+        "references": "Album.AlbumId"
+      },
+      {
+        "name": "MediaTypeId",
+        "type": "INTEGER",
+        "is_pk": false,
+        "is_fk": true,
+        "references": "MediaType.MediaTypeId"
+      },
+      {
+        "name": "GenreId",
+        "type": "INTEGER",
+        "is_pk": false,
+        "is_fk": true,
+        "references": "Genre.GenreId"
+      },
+      {
+        "name": "Composer",
+        "type": "NVARCHAR(220)",
+        "is_pk": false
+      },
+      {
+        "name": "Milliseconds",
+        "type": "INTEGER",
+        "is_pk": false
+      },
+      {
+        "name": "Bytes",
+        "type": "INTEGER",
+        "is_pk": false
+      },
+      {
+        "name": "UnitPrice",
+        "type": "NUMERIC(10,2)",
+        "is_pk": false
+      }
+    ],
+    "foreign_keys": [
+      {
+        "from_column": "MediaTypeId",
+        "to_table": "MediaType",
+        "to_column": "MediaTypeId"
+      },
+      {
+        "from_column": "GenreId",
+        "to_table": "Genre",
+        "to_column": "GenreId"
+      },
+      {
+        "from_column": "AlbumId",
+        "to_table": "Album",
+        "to_column": "AlbumId"
+      }
+    ],
+    "row_count": 3503,
+    "description": null
+  }
+}

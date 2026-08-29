@@ -1,0 +1,935 @@
+{
+  "results": [
+    {
+      "question": "¿Cuáles son los 5 géneros musicales con más canciones vendidas?",
+      "expected": [
+        "Genre",
+        "InvoiceLine",
+        "Track"
+      ],
+      "sim_only": [
+        "Genre",
+        "InvoiceLine"
+      ],
+      "expanded": [
+        "Genre",
+        "InvoiceLine",
+        "Track"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 0.67,
+      "precision_expanded": 1.0,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": true,
+      "latency_ms": 15.0
+    },
+    {
+      "question": "¿Qué empleado tiene más clientes asignados?",
+      "expected": [
+        "Customer",
+        "Employee"
+      ],
+      "sim_only": [
+        "Customer",
+        "Employee"
+      ],
+      "expanded": [
+        "Customer",
+        "Employee",
+        "Invoice"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 1.0,
+      "precision_expanded": 0.67,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": false,
+      "latency_ms": 17.33
+    },
+    {
+      "question": "Lista las canciones de la playlist más grande",
+      "expected": [
+        "Playlist",
+        "PlaylistTrack",
+        "Track"
+      ],
+      "sim_only": [
+        "InvoiceLine",
+        "Playlist",
+        "PlaylistTrack"
+      ],
+      "expanded": [
+        "InvoiceLine",
+        "Playlist",
+        "PlaylistTrack",
+        "Track"
+      ],
+      "precision_sim": 0.67,
+      "recall_sim": 0.67,
+      "precision_expanded": 0.75,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": false,
+      "latency_ms": 7.36
+    },
+    {
+      "question": "¿Cuál es el total facturado por país?",
+      "expected": [
+        "Invoice"
+      ],
+      "sim_only": [
+        "Invoice"
+      ],
+      "expanded": [
+        "Invoice"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 1.0,
+      "precision_expanded": 1.0,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": true,
+      "latency_ms": 18.26
+    },
+    {
+      "question": "¿Qué artistas tienen más de 5 álbumes?",
+      "expected": [
+        "Album",
+        "Artist"
+      ],
+      "sim_only": [
+        "Artist",
+        "Genre",
+        "Track"
+      ],
+      "expanded": [
+        "Album",
+        "Artist",
+        "Genre",
+        "InvoiceLine",
+        "MediaType",
+        "PlaylistTrack",
+        "Track"
+      ],
+      "precision_sim": 0.33,
+      "recall_sim": 0.5,
+      "precision_expanded": 0.29,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": false,
+      "latency_ms": 7.38
+    },
+    {
+      "question": "¿Cuántas canciones tiene cada tipo de formato de audio?",
+      "expected": [
+        "MediaType",
+        "Track"
+      ],
+      "sim_only": [
+        "Genre",
+        "MediaType",
+        "Track"
+      ],
+      "expanded": [
+        "Album",
+        "Genre",
+        "InvoiceLine",
+        "MediaType",
+        "PlaylistTrack",
+        "Track"
+      ],
+      "precision_sim": 0.67,
+      "recall_sim": 1.0,
+      "precision_expanded": 0.33,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": false,
+      "latency_ms": 16.16
+    },
+    {
+      "question": "¿Cuál es el cliente que más ha gastado en total?",
+      "expected": [
+        "Customer",
+        "Invoice"
+      ],
+      "sim_only": [
+        "Invoice"
+      ],
+      "expanded": [
+        "Customer",
+        "Invoice"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 0.5,
+      "precision_expanded": 1.0,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": true,
+      "latency_ms": 17.6
+    },
+    {
+      "question": "¿Quién es el jefe directo de cada empleado?",
+      "expected": [
+        "Employee"
+      ],
+      "sim_only": [
+        "Employee"
+      ],
+      "expanded": [
+        "Employee"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 1.0,
+      "precision_expanded": 1.0,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": true,
+      "latency_ms": 16.55
+    },
+    {
+      "question": "¿Cuáles son las canciones más largas en duración?",
+      "expected": [
+        "Track"
+      ],
+      "sim_only": [
+        "InvoiceLine",
+        "Track"
+      ],
+      "expanded": [
+        "Album",
+        "Genre",
+        "InvoiceLine",
+        "MediaType",
+        "PlaylistTrack",
+        "Track"
+      ],
+      "precision_sim": 0.5,
+      "recall_sim": 1.0,
+      "precision_expanded": 0.17,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": false,
+      "latency_ms": 8.05
+    },
+    {
+      "question": "¿Cuántas canciones compró cada cliente en su factura más reciente?",
+      "expected": [
+        "Customer",
+        "Invoice",
+        "InvoiceLine"
+      ],
+      "sim_only": [
+        "InvoiceLine",
+        "Track"
+      ],
+      "expanded": [
+        "Album",
+        "Genre",
+        "Invoice",
+        "InvoiceLine",
+        "MediaType",
+        "Track"
+      ],
+      "precision_sim": 0.5,
+      "recall_sim": 0.33,
+      "precision_expanded": 0.33,
+      "recall_expanded": 0.67,
+      "exact_match_expanded": false,
+      "latency_ms": 14.44
+    },
+    {
+      "question": "¿Cuál es el álbum con más canciones?",
+      "expected": [
+        "Album",
+        "Track"
+      ],
+      "sim_only": [
+        "InvoiceLine",
+        "Track"
+      ],
+      "expanded": [
+        "Album",
+        "Genre",
+        "InvoiceLine",
+        "MediaType",
+        "PlaylistTrack",
+        "Track"
+      ],
+      "precision_sim": 0.5,
+      "recall_sim": 0.5,
+      "precision_expanded": 0.33,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": false,
+      "latency_ms": 8.04
+    },
+    {
+      "question": "¿Qué artista tiene más canciones en total?",
+      "expected": [
+        "Album",
+        "Artist",
+        "Track"
+      ],
+      "sim_only": [
+        "Genre",
+        "InvoiceLine",
+        "Track"
+      ],
+      "expanded": [
+        "Album",
+        "Genre",
+        "InvoiceLine",
+        "MediaType",
+        "PlaylistTrack",
+        "Track"
+      ],
+      "precision_sim": 0.33,
+      "recall_sim": 0.33,
+      "precision_expanded": 0.33,
+      "recall_expanded": 0.67,
+      "exact_match_expanded": false,
+      "latency_ms": 7.7
+    },
+    {
+      "question": "¿Cuál es el género con mayor duración total de canciones?",
+      "expected": [
+        "Genre",
+        "Track"
+      ],
+      "sim_only": [
+        "Genre",
+        "InvoiceLine",
+        "Track"
+      ],
+      "expanded": [
+        "Album",
+        "Genre",
+        "InvoiceLine",
+        "MediaType",
+        "PlaylistTrack",
+        "Track"
+      ],
+      "precision_sim": 0.67,
+      "recall_sim": 1.0,
+      "precision_expanded": 0.33,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": false,
+      "latency_ms": 8.44
+    },
+    {
+      "question": "¿Cuántas canciones hay por género?",
+      "expected": [
+        "Genre",
+        "Track"
+      ],
+      "sim_only": [
+        "Genre",
+        "MediaType",
+        "Track"
+      ],
+      "expanded": [
+        "Genre",
+        "InvoiceLine",
+        "MediaType",
+        "PlaylistTrack",
+        "Track"
+      ],
+      "precision_sim": 0.67,
+      "recall_sim": 1.0,
+      "precision_expanded": 0.4,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": false,
+      "latency_ms": 7.93
+    },
+    {
+      "question": "¿Cuál es la canción que más veces ha sido comprada?",
+      "expected": [
+        "InvoiceLine",
+        "Track"
+      ],
+      "sim_only": [
+        "InvoiceLine"
+      ],
+      "expanded": [
+        "InvoiceLine",
+        "Track"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 0.5,
+      "precision_expanded": 1.0,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": true,
+      "latency_ms": 8.59
+    },
+    {
+      "question": "¿Cuáles son los clientes que nunca han realizado una compra?",
+      "expected": [
+        "Customer",
+        "Invoice"
+      ],
+      "sim_only": [
+        "Customer",
+        "Invoice"
+      ],
+      "expanded": [
+        "Customer",
+        "Invoice"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 1.0,
+      "precision_expanded": 1.0,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": true,
+      "latency_ms": 8.54
+    },
+    {
+      "question": "¿Qué país tiene el mayor número de clientes?",
+      "expected": [
+        "Customer"
+      ],
+      "sim_only": [
+        "Customer"
+      ],
+      "expanded": [
+        "Customer"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 1.0,
+      "precision_expanded": 1.0,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": true,
+      "latency_ms": 7.88
+    },
+    {
+      "question": "¿Cuál es el promedio gastado por cliente?",
+      "expected": [
+        "Customer",
+        "Invoice"
+      ],
+      "sim_only": [
+        "Invoice"
+      ],
+      "expanded": [
+        "Customer",
+        "Invoice"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 0.5,
+      "precision_expanded": 1.0,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": true,
+      "latency_ms": 8.19
+    },
+    {
+      "question": "¿Qué empleados atienden a clientes de más de un país?",
+      "expected": [
+        "Customer",
+        "Employee"
+      ],
+      "sim_only": [
+        "Customer",
+        "Employee"
+      ],
+      "expanded": [
+        "Customer",
+        "Employee"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 1.0,
+      "precision_expanded": 1.0,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": true,
+      "latency_ms": 8.73
+    },
+    {
+      "question": "¿Cuál es la playlist que contiene más canciones?",
+      "expected": [
+        "Playlist",
+        "PlaylistTrack"
+      ],
+      "sim_only": [
+        "PlaylistTrack"
+      ],
+      "expanded": [
+        "Playlist",
+        "PlaylistTrack",
+        "Track"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 0.5,
+      "precision_expanded": 0.67,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": false,
+      "latency_ms": 8.04
+    },
+    {
+      "question": "¿Qué canciones aparecen en más de una playlist?",
+      "expected": [
+        "Playlist",
+        "PlaylistTrack",
+        "Track"
+      ],
+      "sim_only": [
+        "PlaylistTrack"
+      ],
+      "expanded": [
+        "Playlist",
+        "PlaylistTrack",
+        "Track"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 0.33,
+      "precision_expanded": 1.0,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": true,
+      "latency_ms": 8.54
+    },
+    {
+      "question": "¿Cuál es el artista con mayor cantidad de canciones vendidas?",
+      "expected": [
+        "Album",
+        "Artist",
+        "InvoiceLine",
+        "Track"
+      ],
+      "sim_only": [
+        "Album",
+        "InvoiceLine"
+      ],
+      "expanded": [
+        "Album",
+        "Artist",
+        "InvoiceLine",
+        "Track"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 0.5,
+      "precision_expanded": 1.0,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": true,
+      "latency_ms": 7.86
+    },
+    {
+      "question": "¿Cuánto dinero se ha generado por cada género musical?",
+      "expected": [
+        "Genre",
+        "InvoiceLine",
+        "Track"
+      ],
+      "sim_only": [
+        "Genre",
+        "InvoiceLine"
+      ],
+      "expanded": [
+        "Genre",
+        "InvoiceLine",
+        "Track"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 0.67,
+      "precision_expanded": 1.0,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": true,
+      "latency_ms": 7.58
+    },
+    {
+      "question": "¿Cuál es el tipo de medio más utilizado entre las canciones vendidas?",
+      "expected": [
+        "InvoiceLine",
+        "MediaType",
+        "Track"
+      ],
+      "sim_only": [
+        "Genre",
+        "InvoiceLine"
+      ],
+      "expanded": [
+        "Genre",
+        "InvoiceLine",
+        "Track"
+      ],
+      "precision_sim": 0.5,
+      "recall_sim": 0.33,
+      "precision_expanded": 0.67,
+      "recall_expanded": 0.67,
+      "exact_match_expanded": false,
+      "latency_ms": 7.77
+    },
+    {
+      "question": "¿Cuál es el álbum más vendido?",
+      "expected": [
+        "Album",
+        "InvoiceLine",
+        "Track"
+      ],
+      "sim_only": [
+        "InvoiceLine"
+      ],
+      "expanded": [
+        "InvoiceLine",
+        "Track"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 0.33,
+      "precision_expanded": 1.0,
+      "recall_expanded": 0.67,
+      "exact_match_expanded": false,
+      "latency_ms": 7.8
+    },
+    {
+      "question": "¿Qué clientes han gastado más de 50 dólares?",
+      "expected": [
+        "Customer",
+        "Invoice"
+      ],
+      "sim_only": [
+        "Invoice"
+      ],
+      "expanded": [
+        "Customer",
+        "Invoice"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 0.5,
+      "precision_expanded": 1.0,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": true,
+      "latency_ms": 9.13
+    },
+    {
+      "question": "¿Cuál es la factura con mayor cantidad de canciones?",
+      "expected": [
+        "Invoice",
+        "InvoiceLine"
+      ],
+      "sim_only": [
+        "InvoiceLine"
+      ],
+      "expanded": [
+        "Invoice",
+        "InvoiceLine",
+        "Track"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 0.5,
+      "precision_expanded": 0.67,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": false,
+      "latency_ms": 8.52
+    },
+    {
+      "question": "¿Qué empleados tienen asignados más de 10 clientes?",
+      "expected": [
+        "Customer",
+        "Employee"
+      ],
+      "sim_only": [
+        "Employee"
+      ],
+      "expanded": [
+        "Customer",
+        "Employee"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 0.5,
+      "precision_expanded": 1.0,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": true,
+      "latency_ms": 8.56
+    },
+    {
+      "question": "¿Cuáles son los 10 artistas cuyas canciones han generado más ingresos?",
+      "expected": [
+        "Album",
+        "Artist",
+        "InvoiceLine",
+        "Track"
+      ],
+      "sim_only": [
+        "Artist",
+        "Genre",
+        "InvoiceLine"
+      ],
+      "expanded": [
+        "Album",
+        "Artist",
+        "Genre",
+        "InvoiceLine",
+        "Track"
+      ],
+      "precision_sim": 0.67,
+      "recall_sim": 0.5,
+      "precision_expanded": 0.8,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": false,
+      "latency_ms": 15.57
+    },
+    {
+      "question": "¿Cuál es el género más popular entre las canciones compradas por los clientes de cada país?",
+      "expected": [
+        "Customer",
+        "Genre",
+        "Invoice",
+        "InvoiceLine",
+        "Track"
+      ],
+      "sim_only": [
+        "Genre",
+        "InvoiceLine"
+      ],
+      "expanded": [
+        "Genre",
+        "InvoiceLine",
+        "Track"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 0.4,
+      "precision_expanded": 1.0,
+      "recall_expanded": 0.6,
+      "exact_match_expanded": false,
+      "latency_ms": 12.23
+    },
+    {
+      "question": "¿Qué clientes tienen como representante a un empleado que fue contratado antes de 2003?",
+      "expected": [
+        "Customer",
+        "Employee"
+      ],
+      "sim_only": [
+        "Employee"
+      ],
+      "expanded": [
+        "Customer",
+        "Employee"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 0.5,
+      "precision_expanded": 1.0,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": true,
+      "latency_ms": 7.43
+    },
+    {
+      "question": "¿Qué canciones cuestan más que el precio promedio de todas las canciones?",
+      "expected": [
+        "Track"
+      ],
+      "sim_only": [
+        "InvoiceLine"
+      ],
+      "expanded": [
+        "InvoiceLine",
+        "Track"
+      ],
+      "precision_sim": 0.0,
+      "recall_sim": 0.0,
+      "precision_expanded": 0.5,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": false,
+      "latency_ms": 7.44
+    },
+    {
+      "question": "¿Qué artistas tienen al menos un álbum cuyo título contiene la palabra 'Live'?",
+      "expected": [
+        "Album",
+        "Artist"
+      ],
+      "sim_only": [
+        "Album",
+        "Genre",
+        "Track"
+      ],
+      "expanded": [
+        "Album",
+        "Artist",
+        "Genre",
+        "InvoiceLine",
+        "MediaType",
+        "PlaylistTrack",
+        "Track"
+      ],
+      "precision_sim": 0.33,
+      "recall_sim": 0.5,
+      "precision_expanded": 0.29,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": false,
+      "latency_ms": 7.63
+    },
+    {
+      "question": "¿Qué empleados tienen clientes cuyo país de facturación no coincide con el país registrado del cliente?",
+      "expected": [
+        "Customer",
+        "Employee",
+        "Invoice"
+      ],
+      "sim_only": [
+        "Customer",
+        "Employee"
+      ],
+      "expanded": [
+        "Customer",
+        "Employee",
+        "Invoice"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 0.67,
+      "precision_expanded": 1.0,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": true,
+      "latency_ms": 7.21
+    },
+    {
+      "question": "¿Qué canciones pertenecen a álbumes de artistas que no tienen ninguna canción incluida en una playlist?",
+      "expected": [
+        "Album",
+        "Artist",
+        "PlaylistTrack",
+        "Track"
+      ],
+      "sim_only": [
+        "PlaylistTrack"
+      ],
+      "expanded": [
+        "Playlist",
+        "PlaylistTrack",
+        "Track"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 0.25,
+      "precision_expanded": 0.67,
+      "recall_expanded": 0.5,
+      "exact_match_expanded": false,
+      "latency_ms": 12.79
+    },
+    {
+      "question": "¿Qué clientes realizaron compras de canciones pertenecientes a más de 3 géneros diferentes?",
+      "expected": [
+        "Customer",
+        "Genre",
+        "Invoice",
+        "InvoiceLine",
+        "Track"
+      ],
+      "sim_only": [
+        "Genre",
+        "InvoiceLine"
+      ],
+      "expanded": [
+        "Genre",
+        "InvoiceLine",
+        "Track"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 0.4,
+      "precision_expanded": 1.0,
+      "recall_expanded": 0.6,
+      "exact_match_expanded": false,
+      "latency_ms": 14.4
+    },
+    {
+      "question": "¿Qué canciones tienen una duración superior al promedio de duración de su propio género?",
+      "expected": [
+        "Genre",
+        "Track"
+      ],
+      "sim_only": [
+        "Genre",
+        "MediaType",
+        "Track"
+      ],
+      "expanded": [
+        "Album",
+        "Genre",
+        "InvoiceLine",
+        "MediaType",
+        "PlaylistTrack",
+        "Track"
+      ],
+      "precision_sim": 0.67,
+      "recall_sim": 1.0,
+      "precision_expanded": 0.33,
+      "recall_expanded": 1.0,
+      "exact_match_expanded": false,
+      "latency_ms": 7.68
+    },
+    {
+      "question": "¿Qué artistas tienen canciones que aparecen en playlists pero nunca fueron compradas?",
+      "expected": [
+        "Album",
+        "Artist",
+        "InvoiceLine",
+        "PlaylistTrack",
+        "Track"
+      ],
+      "sim_only": [
+        "Genre",
+        "InvoiceLine",
+        "PlaylistTrack"
+      ],
+      "expanded": [
+        "Genre",
+        "InvoiceLine",
+        "Playlist",
+        "PlaylistTrack",
+        "Track"
+      ],
+      "precision_sim": 0.67,
+      "recall_sim": 0.4,
+      "precision_expanded": 0.6,
+      "recall_expanded": 0.6,
+      "exact_match_expanded": false,
+      "latency_ms": 7.25
+    },
+    {
+      "question": "¿Qué clientes compraron canciones de un artista en más de una factura diferente?",
+      "expected": [
+        "Album",
+        "Artist",
+        "Customer",
+        "Invoice",
+        "InvoiceLine",
+        "Track"
+      ],
+      "sim_only": [
+        "Artist",
+        "InvoiceLine"
+      ],
+      "expanded": [
+        "Album",
+        "Artist",
+        "Invoice",
+        "InvoiceLine",
+        "Track"
+      ],
+      "precision_sim": 1.0,
+      "recall_sim": 0.33,
+      "precision_expanded": 1.0,
+      "recall_expanded": 0.83,
+      "exact_match_expanded": false,
+      "latency_ms": 6.87
+    },
+    {
+      "question": "¿Qué formatos de audio tienen canciones que nunca han sido incluidas en ninguna factura?",
+      "expected": [
+        "InvoiceLine",
+        "MediaType",
+        "Track"
+      ],
+      "sim_only": [
+        "Genre",
+        "MediaType"
+      ],
+      "expanded": [
+        "Genre",
+        "MediaType",
+        "Track"
+      ],
+      "precision_sim": 0.5,
+      "recall_sim": 0.33,
+      "precision_expanded": 0.67,
+      "recall_expanded": 0.67,
+      "exact_match_expanded": false,
+      "latency_ms": 12.65
+    }
+  ],
+  "summary": {
+    "n_preguntas": 40,
+    "precision_promedio_solo_similitud": 0.804,
+    "recall_promedio_solo_similitud": 0.599,
+    "precision_promedio_con_grafo": 0.745,
+    "recall_promedio_con_grafo": 0.912,
+    "exact_match_rate": 0.4,
+    "latencia_promedio_ms": 10.128
+  }
+}

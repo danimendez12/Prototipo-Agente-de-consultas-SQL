@@ -1,0 +1,75 @@
+"""
+Etapa 3: Construcción del grafo de navegación.
+Nodos = tablas (con su descripción y columnas enriquecidas).
+Aristas = relaciones de foreign key, con cardinalidad many_to_one.
+Usamos networkx en memoria, tal como se definió en la arquitectura
+para esquemas de tamaño moderado (sin necesidad de un motor de grafos dedicado).
+"""
+import json
+import sys
+import networkx as nx
+import pickle
+from pathlib import Path
+
+if __package__ in (None, ""):
+    project_root = Path(__file__).resolve().parent.parent
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
+
+from src.project_paths import resolve_artifact_path
+
+
+def build_graph(catalog: dict) -> nx.DiGraph:
+    g = nx.DiGraph()
+    print(f"Construyendo grafo a partir del catálogo (n={len(catalog)} tablas)...")
+
+    for table_name, info in catalog.items():
+        if info["status"] != "active":
+            continue  # solo nodos aprobados entran al grafo activo
+        g.add_node(
+            table_name,
+            description=info["description"],
+            columns=info["columns"],
+            row_count=info["row_count"],
+            example_questions=info.get("example_questions", []),
+        )
+
+    for table_name, info in catalog.items():
+        if info["status"] != "active":
+            continue
+        for fk in info["foreign_keys"]:
+            g.add_edge(
+                table_name,
+                fk["to_table"],
+                via=fk["from_column"],
+                cardinality="many_to_one",
+            )
+
+    return g
+
+
+def node_to_text(table_name: str, node_data: dict) -> str:
+    """Concatena nombre + descripción + columnas para indexar (texto plano)."""
+    col_names = ", ".join(c["name"] for c in node_data["columns"])
+    col_descs = " ".join(
+        c.get("description", "") for c in node_data["columns"] if c.get("description")
+    )
+    return f"{table_name}. {node_data['description']} Columnas: {col_names}. {col_descs}"
+
+
+if __name__ == "__main__":
+    input_path = resolve_artifact_path("catalog_enriched_llm.json")
+    output_path = resolve_artifact_path("graph.pkl")
+
+    with open(input_path, encoding="utf-8") as f:
+        catalog = json.load(f)
+
+    graph = build_graph(catalog)
+    print(f"Grafo construido: {graph.number_of_nodes()} nodos, {graph.number_of_edges()} aristas")
+    print("\nAristas (relaciones):")
+    for u, v, data in graph.edges(data=True):
+        print(f"  {u} --[{data['via']}]--> {v}")
+
+    with open(output_path, "wb") as f:
+        pickle.dump(graph, f)
+    print(f"\nGrafo guardado -> {output_path}")

@@ -1,0 +1,625 @@
+{
+  "Album": {
+    "table": "Album",
+    "columns": [
+      {
+        "name": "AlbumId",
+        "type": "INTEGER",
+        "is_pk": true,
+        "description": "Identificador único del álbum."
+      },
+      {
+        "name": "Title",
+        "type": "NVARCHAR(160)",
+        "is_pk": false,
+        "description": "Título del álbum."
+      },
+      {
+        "name": "ArtistId",
+        "type": "INTEGER",
+        "is_pk": false,
+        "is_fk": true,
+        "references": "Artist.ArtistId",
+        "description": "Referencia al artista que publicó el álbum."
+      }
+    ],
+    "foreign_keys": [
+      {
+        "from_column": "ArtistId",
+        "to_table": "Artist",
+        "to_column": "ArtistId"
+      }
+    ],
+    "row_count": 347,
+    "description": "Representa un álbum musical publicado por un artista, agrupando varias canciones (tracks). A diferencia de Track, que almacena cada canción individual, Album solo contiene el título del álbum y a qué artista pertenece.",
+    "example_questions": [
+      "¿Cuántos álbumes ha publicado AC/DC?",
+      "¿Cuál es el título del álbum con AlbumId 5?",
+      "Lista todos los álbumes ordenados alfabéticamente por título."
+    ],
+    "status": "active"
+  },
+  "Artist": {
+    "table": "Artist",
+    "columns": [
+      {
+        "name": "ArtistId",
+        "type": "INTEGER",
+        "is_pk": true,
+        "description": "Identificador único del artista."
+      },
+      {
+        "name": "Name",
+        "type": "NVARCHAR(120)",
+        "is_pk": false,
+        "description": "Nombre del artista o banda."
+      }
+    ],
+    "foreign_keys": [],
+    "row_count": 275,
+    "description": "Catálogo de artistas o bandas musicales. A diferencia de Album, esta tabla no contiene información de publicaciones, solo el nombre del artista.",
+    "example_questions": [
+      "¿Cuántos artistas distintos hay registrados en la base de datos?",
+      "¿Existe un artista llamado 'Queen' en el catálogo?",
+      "Muestra el nombre de todas las bandas registradas."
+    ],
+    "status": "active"
+  },
+  "Customer": {
+    "table": "Customer",
+    "columns": [
+      {
+        "name": "CustomerId",
+        "type": "INTEGER",
+        "is_pk": true,
+        "description": "Identificador único del cliente."
+      },
+      {
+        "name": "FirstName",
+        "type": "NVARCHAR(40)",
+        "is_pk": false,
+        "description": "Nombre del cliente."
+      },
+      {
+        "name": "LastName",
+        "type": "NVARCHAR(20)",
+        "is_pk": false,
+        "description": "Apellido del cliente."
+      },
+      {
+        "name": "Company",
+        "type": "NVARCHAR(80)",
+        "is_pk": false,
+        "description": "Empresa asociada al cliente, si aplica."
+      },
+      {
+        "name": "Address",
+        "type": "NVARCHAR(70)",
+        "is_pk": false,
+        "description": "Dirección postal del cliente."
+      },
+      {
+        "name": "City",
+        "type": "NVARCHAR(40)",
+        "is_pk": false,
+        "description": "Ciudad de residencia del cliente."
+      },
+      {
+        "name": "State",
+        "type": "NVARCHAR(40)",
+        "is_pk": false,
+        "description": "Estado o provincia de residencia del cliente."
+      },
+      {
+        "name": "Country",
+        "type": "NVARCHAR(40)",
+        "is_pk": false,
+        "description": "País de residencia del cliente."
+      },
+      {
+        "name": "PostalCode",
+        "type": "NVARCHAR(10)",
+        "is_pk": false,
+        "description": "Código postal del cliente."
+      },
+      {
+        "name": "Phone",
+        "type": "NVARCHAR(24)",
+        "is_pk": false,
+        "description": "Número de teléfono del cliente."
+      },
+      {
+        "name": "Fax",
+        "type": "NVARCHAR(24)",
+        "is_pk": false,
+        "description": "Número de fax del cliente."
+      },
+      {
+        "name": "Email",
+        "type": "NVARCHAR(60)",
+        "is_pk": false,
+        "description": "Correo electrónico del cliente."
+      },
+      {
+        "name": "SupportRepId",
+        "type": "INTEGER",
+        "is_pk": false,
+        "is_fk": true,
+        "references": "Employee.EmployeeId",
+        "description": "Empleado de soporte asignado a este cliente."
+      }
+    ],
+    "foreign_keys": [
+      {
+        "from_column": "SupportRepId",
+        "to_table": "Employee",
+        "to_column": "EmployeeId"
+      }
+    ],
+    "row_count": 59,
+    "description": "Contiene los datos personales y de contacto de los clientes que compran en la tienda, incluyendo el empleado de soporte asignado. A diferencia de Employee, aquí las personas son compradoras, no trabajadores de la empresa.",
+    "example_questions": [
+      "¿Cuántos clientes viven en Brasil?",
+      "¿Cuál es el correo electrónico de la clienta Leonie Köhler?",
+      "¿Qué empleado de soporte atiende al cliente con CustomerId 1?"
+    ],
+    "status": "active"
+  },
+  "Employee": {
+    "table": "Employee",
+    "columns": [
+      {
+        "name": "EmployeeId",
+        "type": "INTEGER",
+        "is_pk": true,
+        "description": "Identificador único del empleado."
+      },
+      {
+        "name": "LastName",
+        "type": "NVARCHAR(20)",
+        "is_pk": false,
+        "description": "Apellido del empleado."
+      },
+      {
+        "name": "FirstName",
+        "type": "NVARCHAR(20)",
+        "is_pk": false,
+        "description": "Nombre del empleado."
+      },
+      {
+        "name": "Title",
+        "type": "NVARCHAR(30)",
+        "is_pk": false,
+        "description": "Cargo o puesto del empleado dentro de la empresa."
+      },
+      {
+        "name": "ReportsTo",
+        "type": "INTEGER",
+        "is_pk": false,
+        "is_fk": true,
+        "references": "Employee.EmployeeId",
+        "description": "Empleado supervisor al que reporta este empleado."
+      },
+      {
+        "name": "BirthDate",
+        "type": "DATETIME",
+        "is_pk": false,
+        "description": "Fecha de nacimiento del empleado."
+      },
+      {
+        "name": "HireDate",
+        "type": "DATETIME",
+        "is_pk": false,
+        "description": "Fecha de contratación del empleado."
+      },
+      {
+        "name": "Address",
+        "type": "NVARCHAR(70)",
+        "is_pk": false,
+        "description": "Dirección postal del empleado."
+      },
+      {
+        "name": "City",
+        "type": "NVARCHAR(40)",
+        "is_pk": false,
+        "description": "Ciudad de residencia del empleado."
+      },
+      {
+        "name": "State",
+        "type": "NVARCHAR(40)",
+        "is_pk": false,
+        "description": "Estado o provincia de residencia del empleado."
+      },
+      {
+        "name": "Country",
+        "type": "NVARCHAR(40)",
+        "is_pk": false,
+        "description": "País de residencia del empleado."
+      },
+      {
+        "name": "PostalCode",
+        "type": "NVARCHAR(10)",
+        "is_pk": false,
+        "description": "Código postal del empleado."
+      },
+      {
+        "name": "Phone",
+        "type": "NVARCHAR(24)",
+        "is_pk": false,
+        "description": "Número de teléfono del empleado."
+      },
+      {
+        "name": "Fax",
+        "type": "NVARCHAR(24)",
+        "is_pk": false,
+        "description": "Número de fax del empleado."
+      },
+      {
+        "name": "Email",
+        "type": "NVARCHAR(60)",
+        "is_pk": false,
+        "description": "Correo electrónico corporativo del empleado."
+      }
+    ],
+    "foreign_keys": [
+      {
+        "from_column": "ReportsTo",
+        "to_table": "Employee",
+        "to_column": "EmployeeId"
+      }
+    ],
+    "row_count": 8,
+    "description": "Contiene los datos de los empleados de la empresa, incluyendo su jerarquía interna (a quién reportan) y su cargo. A diferencia de Customer, estas personas trabajan para la empresa y no realizan compras.",
+    "example_questions": [
+      "¿Quién es el jefe directo de Nancy Edwards?",
+      "¿Qué empleados tienen el cargo de 'Sales Manager'?",
+      "¿Cuándo fue contratado Andrew Adams?"
+    ],
+    "status": "active"
+  },
+  "Genre": {
+    "table": "Genre",
+    "columns": [
+      {
+        "name": "GenreId",
+        "type": "INTEGER",
+        "is_pk": true,
+        "description": "Identificador único del género musical."
+      },
+      {
+        "name": "Name",
+        "type": "NVARCHAR(120)",
+        "is_pk": false,
+        "description": "Nombre del género musical."
+      }
+    ],
+    "foreign_keys": [],
+    "row_count": 25,
+    "description": "Catálogo de géneros musicales (como Rock o Jazz) que se asignan a las canciones. Es una tabla de referencia simple, distinta de MediaType que clasifica el formato del archivo y no el estilo musical.",
+    "example_questions": [
+      "¿Qué géneros musicales existen en el catálogo?",
+      "¿Cuántas canciones pertenecen al género Jazz?",
+      "¿Existe el género 'Reggae' en la base de datos?"
+    ],
+    "status": "active"
+  },
+  "Invoice": {
+    "table": "Invoice",
+    "columns": [
+      {
+        "name": "InvoiceId",
+        "type": "INTEGER",
+        "is_pk": true,
+        "description": "Identificador único de la factura."
+      },
+      {
+        "name": "CustomerId",
+        "type": "INTEGER",
+        "is_pk": false,
+        "is_fk": true,
+        "references": "Customer.CustomerId",
+        "description": "Cliente que realizó la compra."
+      },
+      {
+        "name": "InvoiceDate",
+        "type": "DATETIME",
+        "is_pk": false,
+        "description": "Fecha en que se generó la factura."
+      },
+      {
+        "name": "BillingAddress",
+        "type": "NVARCHAR(70)",
+        "is_pk": false,
+        "description": "Dirección de facturación usada en la compra."
+      },
+      {
+        "name": "BillingCity",
+        "type": "NVARCHAR(40)",
+        "is_pk": false,
+        "description": "Ciudad de facturación."
+      },
+      {
+        "name": "BillingState",
+        "type": "NVARCHAR(40)",
+        "is_pk": false,
+        "description": "Estado o provincia de facturación."
+      },
+      {
+        "name": "BillingCountry",
+        "type": "NVARCHAR(40)",
+        "is_pk": false,
+        "description": "País de facturación."
+      },
+      {
+        "name": "BillingPostalCode",
+        "type": "NVARCHAR(10)",
+        "is_pk": false,
+        "description": "Código postal de facturación."
+      },
+      {
+        "name": "Total",
+        "type": "NUMERIC(10,2)",
+        "is_pk": false,
+        "description": "Monto total de la factura."
+      }
+    ],
+    "foreign_keys": [
+      {
+        "from_column": "CustomerId",
+        "to_table": "Customer",
+        "to_column": "CustomerId"
+      }
+    ],
+    "row_count": 412,
+    "description": "Representa una factura o transacción de compra realizada por un cliente, con datos de facturación y el monto total. A diferencia de InvoiceLine, aquí no aparecen las canciones compradas individualmente, solo el resumen de la transacción.",
+    "example_questions": [
+      "¿Cuál fue el monto total facturado en enero de 2021?",
+      "¿Cuántas facturas ha generado el cliente con CustomerId 2?",
+      "Muestra las facturas con destino de facturación en Noruega.",
+      "¿Cual es el total facturado por pais?"
+    ],
+    "status": "active"
+  },
+  "InvoiceLine": {
+    "table": "InvoiceLine",
+    "columns": [
+      {
+        "name": "InvoiceLineId",
+        "type": "INTEGER",
+        "is_pk": true,
+        "description": "Identificador único de la línea de factura."
+      },
+      {
+        "name": "InvoiceId",
+        "type": "INTEGER",
+        "is_pk": false,
+        "is_fk": true,
+        "references": "Invoice.InvoiceId",
+        "description": "Factura a la que pertenece esta línea."
+      },
+      {
+        "name": "TrackId",
+        "type": "INTEGER",
+        "is_pk": false,
+        "is_fk": true,
+        "references": "Track.TrackId",
+        "description": "Canción vendida en esta línea de factura."
+      },
+      {
+        "name": "UnitPrice",
+        "type": "NUMERIC(10,2)",
+        "is_pk": false,
+        "description": "Precio unitario de la canción en el momento de la venta."
+      },
+      {
+        "name": "Quantity",
+        "type": "INTEGER",
+        "is_pk": false,
+        "description": "Cantidad de unidades vendidas de esa canción."
+      }
+    ],
+    "foreign_keys": [
+      {
+        "from_column": "TrackId",
+        "to_table": "Track",
+        "to_column": "TrackId"
+      },
+      {
+        "from_column": "InvoiceId",
+        "to_table": "Invoice",
+        "to_column": "InvoiceId"
+      }
+    ],
+    "row_count": 2240,
+    "description": "Detalla cada canción individual incluida dentro de una factura, con su precio unitario y cantidad comprada. A diferencia de Invoice, que solo tiene el total general, esta tabla permite ver qué tracks específicos se vendieron.",
+    "example_questions": [
+      "¿Cuál es la canción más vendida según las líneas de factura?",
+      "¿Cuántas unidades del track con TrackId 4 se han vendido?",
+      "Muestra el detalle de canciones vendidas en la factura número 1."
+    ],
+    "status": "active"
+  },
+  "MediaType": {
+    "table": "MediaType",
+    "columns": [
+      {
+        "name": "MediaTypeId",
+        "type": "INTEGER",
+        "is_pk": true,
+        "description": "Identificador único del tipo de archivo multimedia."
+      },
+      {
+        "name": "Name",
+        "type": "NVARCHAR(120)",
+        "is_pk": false,
+        "description": "Nombre del formato de archivo."
+      }
+    ],
+    "foreign_keys": [],
+    "row_count": 5,
+    "description": "Catálogo de formatos de archivo digital (como MPEG o AAC protegido) que puede tener una canción. Se diferencia de Genre en que clasifica el tipo de archivo, no el estilo musical.",
+    "example_questions": [
+      "¿Qué formatos de archivo multimedia están disponibles?",
+      "¿Cuántas canciones están en formato 'Protected AAC audio file'?",
+      "¿Existe el formato de archivo MPEG en el catálogo?"
+    ],
+    "status": "active"
+  },
+  "Playlist": {
+    "table": "Playlist",
+    "columns": [
+      {
+        "name": "PlaylistId",
+        "type": "INTEGER",
+        "is_pk": true,
+        "description": "Identificador único de la lista de reproducción."
+      },
+      {
+        "name": "Name",
+        "type": "NVARCHAR(120)",
+        "is_pk": false,
+        "description": "Nombre de la lista de reproducción."
+      }
+    ],
+    "foreign_keys": [],
+    "row_count": 18,
+    "description": "Catálogo de listas de reproducción con nombre (como 'Music' o 'Movies'), que agrupan canciones a través de PlaylistTrack. No contiene las canciones en sí, solo el nombre de la lista.",
+    "example_questions": [
+      "¿Cuántas listas de reproducción existen en total?",
+      "¿Existe una lista de reproducción llamada 'Movies'?",
+      "Muestra los nombres de todas las playlists disponibles."
+    ],
+    "status": "active"
+  },
+  "PlaylistTrack": {
+    "table": "PlaylistTrack",
+    "columns": [
+      {
+        "name": "PlaylistId",
+        "type": "INTEGER",
+        "is_pk": true,
+        "is_fk": true,
+        "references": "Playlist.PlaylistId",
+        "description": "Lista de reproducción a la que pertenece la canción."
+      },
+      {
+        "name": "TrackId",
+        "type": "INTEGER",
+        "is_pk": true,
+        "is_fk": true,
+        "references": "Track.TrackId",
+        "description": "Canción incluida en la lista de reproducción."
+      }
+    ],
+    "foreign_keys": [
+      {
+        "from_column": "TrackId",
+        "to_table": "Track",
+        "to_column": "TrackId"
+      },
+      {
+        "from_column": "PlaylistId",
+        "to_table": "Playlist",
+        "to_column": "PlaylistId"
+      }
+    ],
+    "row_count": 8715,
+    "description": "Tabla intermedia que asocia canciones con listas de reproducción, permitiendo que una canción esté en varias playlists y una playlist tenga muchas canciones. A diferencia de Playlist, aquí se registran las relaciones canción-lista, no el nombre de la lista.",
+    "example_questions": [
+      "¿Qué canciones están incluidas en la playlist con PlaylistId 1?",
+      "¿En cuántas listas de reproducción aparece el track con TrackId 3402?",
+      "¿Qué playlists contienen la canción 'Balls to the Wall'?"
+    ],
+    "status": "active"
+  },
+  "Track": {
+    "table": "Track",
+    "columns": [
+      {
+        "name": "TrackId",
+        "type": "INTEGER",
+        "is_pk": true,
+        "description": "Identificador único de la canción."
+      },
+      {
+        "name": "Name",
+        "type": "NVARCHAR(200)",
+        "is_pk": false,
+        "description": "Título de la canción."
+      },
+      {
+        "name": "AlbumId",
+        "type": "INTEGER",
+        "is_pk": false,
+        "is_fk": true,
+        "references": "Album.AlbumId",
+        "description": "Álbum al que pertenece la canción."
+      },
+      {
+        "name": "MediaTypeId",
+        "type": "INTEGER",
+        "is_pk": false,
+        "is_fk": true,
+        "references": "MediaType.MediaTypeId",
+        "description": "Formato de archivo de la canción."
+      },
+      {
+        "name": "GenreId",
+        "type": "INTEGER",
+        "is_pk": false,
+        "is_fk": true,
+        "references": "Genre.GenreId",
+        "description": "Género musical de la canción."
+      },
+      {
+        "name": "Composer",
+        "type": "NVARCHAR(220)",
+        "is_pk": false,
+        "description": "Compositor o compositores de la canción."
+      },
+      {
+        "name": "Milliseconds",
+        "type": "INTEGER",
+        "is_pk": false,
+        "description": "Duración de la canción en milisegundos."
+      },
+      {
+        "name": "Bytes",
+        "type": "INTEGER",
+        "is_pk": false,
+        "description": "Tamaño del archivo de la canción en bytes."
+      },
+      {
+        "name": "UnitPrice",
+        "type": "NUMERIC(10,2)",
+        "is_pk": false,
+        "description": "Precio de venta de la canción."
+      }
+    ],
+    "foreign_keys": [
+      {
+        "from_column": "MediaTypeId",
+        "to_table": "MediaType",
+        "to_column": "MediaTypeId"
+      },
+      {
+        "from_column": "GenreId",
+        "to_table": "Genre",
+        "to_column": "GenreId"
+      },
+      {
+        "from_column": "AlbumId",
+        "to_table": "Album",
+        "to_column": "AlbumId"
+      }
+    ],
+    "row_count": 3503,
+    "description": "Representa cada canción individual del catálogo, con su duración, tamaño, precio, compositor y referencias a álbum, género y tipo de archivo. Es la entidad central que conecta con Album, Genre, MediaType, InvoiceLine y PlaylistTrack.",
+    "example_questions": [
+      "¿Cuál es la duración en milisegundos de la canción 'For Those About To Rock'?",
+      "¿Quién compuso la canción con TrackId 1?",
+      "¿Cuántas canciones tiene el álbum con AlbumId 2?"
+    ],
+    "status": "active"
+  }
+}
