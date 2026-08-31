@@ -1,19 +1,18 @@
 """
-Agente Explorador — envuelve la herramienta de retrieval (Explorador,
-puramente vectorial + grafo, ya afinada) con razonamiento de un LLM.
+Explorer agent — wraps the retrieval tool (Explorer, purely vector-based + graph,
+already tuned) with LLM reasoning.
 
-Diferencia con explorador.py:
-- explorador.py: pipeline FIJO (embeddings -> umbral relativo -> expansión
-  por grafo con techo). Ningún paso "decide" nada, solo aplica reglas.
-- AgentExplorador: el LLM decide dinámicamente qué buscar, si reformular
-  la búsqueda, si consultar vecinos del grafo, y qué tablas incluir en
-  la respuesta final — el tipo de juicio que un umbral fijo no puede dar
-  (recuerda el caso "Artist vs Invoice casi empatados en score": un
-  número no puede razonar sobre eso, un LLM sí).
+Difference from explorer.py:
+- explorer.py: fixed pipeline (embeddings -> relative threshold -> graph expansion with limits).
+  No stage decides anything; it only applies rules.
+- AgentExplorer: the LLM decides dynamically what to search, whether to reformulate the query,
+  whether to inspect graph neighbors, and which tables to include in the final answer — the kind
+  of judgment a fixed threshold cannot provide (remember the case where "Artist vs Invoice" are
+  almost tied on score: a number cannot reason about that nuance, an LLM can).
 
-Costo y latencia: cada pregunta ahora cuesta tokens reales de API y
-tarda segundos, no milisegundos (varias idas y vueltas a Claude en vez
-de una operación local). Esto es un trade-off deliberado, no un error.
+Cost and latency: each question now incurs real API token costs and takes seconds instead of
+milliseconds (several Claude round-trips instead of a local operation). This is a deliberate
+trade-off, not a bug.
 """
 import json
 from anthropic import Anthropic
@@ -21,30 +20,30 @@ from anthropic import Anthropic
 client = Anthropic()
 
 SEARCH_TOOL = {
-    "name": "buscar_tablas",
+    "name": "search_tables",
     "description": (
-        "Busca tablas del esquema semánticamente relacionadas con un texto. "
-        "Devuelve las tablas más relevantes con su score de similitud y descripción."
+        "Searches the schema for tables semantically related to a text query. "
+        "Returns the most relevant tables with their similarity score and description."
     ),
     "input_schema": {
         "type": "object",
         "properties": {
             "query": {
                 "type": "string",
-                "description": "Texto a buscar (la pregunta original o una reformulación/sinónimo)",
+                "description": "Text to search (the original question or a reformulation/synonym)",
             },
-            "top_n": {"type": "integer", "description": "Cuántos resultados devolver", "default": 6},
+            "top_n": {"type": "integer", "description": "How many results to return", "default": 6},
         },
         "required": ["query"],
     },
 }
 
 NEIGHBORS_TOOL = {
-    "name": "vecinos_de_tabla",
+    "name": "table_neighbors",
     "description": (
-        "Devuelve las tablas directamente conectadas por foreign key a una tabla dada. "
-        "Útil para encontrar tablas de unión necesarias en un JOIN que la búsqueda "
-        "semántica pura no detecta bien (ej. tablas muchos-a-muchos)."
+        "Returns the tables directly connected by a foreign key to a given table. "
+        "Useful for identifying the join tables needed when a semantic search alone misses the "
+        "many-to-many relationship or other necessary joins."
     ),
     "input_schema": {
         "type": "object",
@@ -54,78 +53,79 @@ NEIGHBORS_TOOL = {
 }
 
 FINAL_TOOL = {
-    "name": "entregar_tablas_finales",
+    "name": "deliver_final_tables",
     "description": (
-        "Entrega la lista final y definitiva de tablas necesarias para responder "
-        "la pregunta del usuario. Llama a esta herramienta UNA SOLA VEZ, cuando "
-        "ya estés seguro de tu respuesta."
+        "Delivers the final, definitive set of tables needed to answer the user's question. "
+        "Call this tool only once, when you are confident in your answer."
     ),
     "input_schema": {
         "type": "object",
         "properties": {
-            "tablas": {"type": "array", "items": {"type": "string"}},
-            "razonamiento": {
+            "tables": {"type": "array", "items": {"type": "string"}},
+            "reasoning": {
                 "type": "string",
-                "description": "Breve explicación de por qué estas tablas y no otras",
+                "description": "Brief explanation of why these tables are needed and others are not",
             },
         },
-        "required": ["tablas", "razonamiento"],
+        "required": ["tables", "reasoning"],
     },
 }
 
-SYSTEM_PROMPT = """Eres el agente Explorador de un sistema de consultas a bases de datos.
+SYSTEM_PROMPT = """You are the Explorer agent for a database query system.
 
-Tu trabajo: dado una pregunta en lenguaje natural, determinar EXACTAMENTE
-qué tablas de la base de datos son necesarias para responderla — ni de más
-ni de menos. Esta lista se le entregará después a un Generador de SQL: una
-tabla de más puede hacerlo generar un JOIN innecesario, y una tabla de
-menos hace imposible responder la pregunta.
+Your job: given a natural-language question, determine EXACTLY which database tables are
+required to answer it — neither more nor fewer. This list is later given to a SQL Generator:
+one extra table can produce an unnecessary JOIN, while a missing table makes the question
+impossible to answer.
 
-Herramientas disponibles:
-- buscar_tablas: búsqueda semántica. Puedes llamarla más de una vez con
-  reformulaciones distintas si la primera búsqueda no te da resultados
-  convincentes (por ejemplo, si la pregunta usa una palabra que quizás no
-  coincide con el vocabulario de las descripciones del esquema).
-- vecinos_de_tabla: úsala cuando sospeches que la pregunta requiere un JOIN
-  y quieras confirmar qué tabla intermedia lo conecta.
-- entregar_tablas_finales: tu respuesta final. Llámala una sola vez, cuando
-  ya tengas suficiente evidencia.
+Available tools:
+- search_tables: semantic search. You may call it multiple times with different reformulations if
+the first search does not produce convincing results.
+- table_neighbors: use it when the question likely requires a JOIN and you want to confirm the
+  intermediate table that connects the relevant entities.
+- deliver_final_tables: your final answer. Call it once, when you have sufficient evidence.
 
-Sé eficiente: no llames a buscar_tablas más de 2-3 veces por pregunta.
-Si dos tablas candidatas tienen scores muy parecidos, usa tu criterio sobre
-cuál es realmente relevante para el SIGNIFICADO de la pregunta, no solo el
-score numérico — para eso existes, un puntaje de similitud no distingue
-matices de significado tan bien como tú."""
+Be efficient: do not call search_tables more than 2-3 times per question.
+If two candidate tables have very similar scores, use your judgment about which one is truly
+relevant for the meaning of the question, not just the numeric score — that is why you exist, a
+similarity score does not distinguish semantic nuances as well as a human LLM can."""
 
 
-class AgentExplorador:
-    def __init__(self, explorador, model="claude-sonnet-5", max_tool_calls=6):
-        self.explorador = explorador  # instancia de explorador.py, ya indexada
+class AgentExplorer:
+    def __init__(self, explorer, model="claude-sonnet-5", max_tool_calls=6):
+        self.explorer = explorer
         self.model = model
         self.max_tool_calls = max_tool_calls
 
     def _execute_tool(self, name, tool_input):
-        if name == "buscar_tablas":
-            scores = self.explorador._combined_scores(tool_input["query"])
+        legacy_name_map = {
+            "buscar_tablas": "search_tables",
+            "vecinos_de_tabla": "table_neighbors",
+            "entregar_tablas_finales": "deliver_final_tables",
+        }
+        resolved_name = legacy_name_map.get(name, name)
+
+        if resolved_name == "search_tables":
+            scores = self.explorer._combined_scores(tool_input["query"])
             ranked = sorted(scores.items(), key=lambda x: -x[1])[: tool_input.get("top_n", 6)]
             return [
                 {
-                    "tabla": t,
+                    "table": t,
                     "score": round(float(s), 3),
-                    "descripcion": self.explorador.graph.nodes[t]["description"],
+                    "description": self.explorer.graph.nodes[t]["description"],
                 }
                 for t, s in ranked
             ]
-        elif name == "vecinos_de_tabla":
+        elif resolved_name == "table_neighbors":
             table = tool_input["table"]
-            if table not in self.explorador.graph:
-                return {"error": f"tabla '{table}' no existe en el esquema"}
-            vecinos = list(self.explorador.graph.successors(table)) + list(
-                self.explorador.graph.predecessors(table)
+            if table not in self.explorer.graph:
+                return {"error": f"table '{table}' does not exist in the schema"}
+            neighbors = list(self.explorer.graph.successors(table)) + list(
+                self.explorer.graph.predecessors(table)
             )
-            return {"vecinos": vecinos}
+            return {"neighbors": neighbors}
         else:
-            return {"error": f"herramienta desconocida: {name}"}
+            return {"error": f"unknown tool: {name}"}
 
     def retrieve(self, question: str, verbose: bool = False) -> dict:
         messages = [{"role": "user", "content": question}]
@@ -146,20 +146,20 @@ class AgentExplorador:
 
             tool_use_blocks = [b for b in response.content if b.type == "tool_use"]
             if not tool_use_blocks:
-                break  # el modelo respondió sin usar ninguna tool (no debería pasar)
+                break
 
             messages.append({"role": "assistant", "content": response.content})
             tool_results = []
 
             for block in tool_use_blocks:
-                if block.name == "entregar_tablas_finales":
-                    print("\n[Explorador] Tablas finales entregadas al Generador:")
-                    for table in block.input["tablas"]:
+                if block.name in ("deliver_final_tables", "entregar_tablas_finales"):
+                    print("\n[Explorer] Final tables delivered to the SQL generator:")
+                    for table in block.input["tables"]:
                         print(f"  - {table}")
-                    print(f"  Razonamiento: {block.input['razonamiento']}")
+                    print(f"  Reasoning: {block.input['reasoning']}")
                     return {
-                        "tables": block.input["tablas"],
-                        "reasoning": block.input["razonamiento"],
+                        "tables": block.input["tables"],
+                        "reasoning": block.input["reasoning"],
                         "tool_calls": tool_calls_made,
                         "usage": usage_total,
                         "trace": trace,
@@ -168,15 +168,15 @@ class AgentExplorador:
                 result = self._execute_tool(block.name, block.input)
                 trace.append({"tool": block.name, "input": block.input, "result": result})
 
-                if block.name == "buscar_tablas":
-                    print("\n[Explorador] Tablas recibidas del explorador:")
+                if block.name in ("search_tables", "buscar_tablas"):
+                    print("\n[Explorer] Tables received from the explorer:")
                     for item in result:
                         print(
-                            f"  - {item['tabla']}: score={item['score']} | "
-                            f"descripcion={item['descripcion'][:100]}"
+                            f"  - {item['table']}: score={item['score']} | "
+                            f"description={item['description'][:100]}"
                         )
-                elif block.name == "vecinos_de_tabla":
-                    print(f"\n[Explorador] Vecinos de '{block.input['table']}': {result.get('vecinos', [])}")
+                elif block.name in ("table_neighbors", "vecinos_de_tabla"):
+                    print(f"\n[Explorer] Neighbors of '{block.input['table']}': {result.get('neighbors', [])}")
 
                 if verbose:
                     print(f"  [{block.name}] {block.input} -> {result}")
@@ -193,11 +193,14 @@ class AgentExplorador:
 
         return {
             "tables": [],
-            "reasoning": "límite de tool calls alcanzado sin respuesta final",
+            "reasoning": "tool call limit reached without a final answer",
             "tool_calls": tool_calls_made,
             "usage": usage_total,
             "trace": trace,
         }
+
+
+AgentExplorador = AgentExplorer
 
 
 if __name__ == "__main__":
@@ -207,8 +210,8 @@ if __name__ == "__main__":
 
     with open(resolve_graph_path(), "rb") as f:
         graph = pickle.load(f)
-    explorador = Explorador(graph)
-    agent = AgentExplorador(explorador)
+    explorer = Explorador(graph)
+    agent = AgentExplorer(explorer)
 
     for q in [
         "¿Cuánto dinero se ha generado por cada género musical?",
@@ -216,6 +219,6 @@ if __name__ == "__main__":
     ]:
         print(f"\n❓ {q}")
         result = agent.retrieve(q, verbose=True)
-        print(f"  Tablas: {result['tables']}")
-        print(f"  Razonamiento: {result['reasoning']}")
+        print(f"  Tables: {result['tables']}")
+        print(f"  Reasoning: {result['reasoning']}")
         print(f"  Tool calls: {result['tool_calls']}  |  Tokens: {result['usage']}")

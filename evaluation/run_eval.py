@@ -1,13 +1,12 @@
 """
-Corre el Explorador contra el set de evaluación y calcula:
-- Precision: de las tablas recuperadas, cuántas eran realmente necesarias
-- Recall: de las tablas necesarias, cuántas se recuperaron
-- Exact match: el conjunto recuperado es idéntico al esperado
-- Latencia por consulta
+Runs the Explorer against the evaluation set and calculates:
+- Precision: among the retrieved tables, how many were truly needed
+- Recall: among the tables that were needed, how many were retrieved
+- Exact match: the retrieved set is identical to the expected set
+- Latency per query
 
-Se mide tanto sobre "retrieved_by_similarity" (solo TF-IDF) como sobre
-"expanded_with_graph" (TF-IDF + expansión de 1 salto), para poder
-argumentar cuánto aporta la expansión por grafo frente a similitud pura.
+It measures both "retrieved_by_similarity" (TF-IDF only) and "expanded_with_graph"
+(TF-IDF + 1-hop expansion) to show how much graph expansion adds over pure similarity.
 """
 import sys
 import os
@@ -41,14 +40,14 @@ def run_eval():
     graph_path = resolve_graph_path()
     with open(graph_path, "rb") as f:
         graph = pickle.load(f)
-    explorador = Explorador(graph)
+    explorer = Explorador(graph)
 
     results = []
     for case in EVAL_SET:
         expected = case["expected_tables"]
 
         t0 = time.perf_counter()
-        ctx = explorador.retrieve(case["question"], top_k=3, expand_hops=1)
+        ctx = explorer.retrieve(case["question"], top_k=3, expand_hops=1)
         latency_ms = (time.perf_counter() - t0) * 1000
 
         sim_only = set(ctx["retrieved_by_similarity"])
@@ -79,13 +78,13 @@ def summarize(results):
     exact_matches = sum(1 for r in results if r["exact_match_expanded"])
 
     summary = {
-        "n_preguntas": n,
-        "precision_promedio_solo_similitud": avg("precision_sim"),
-        "recall_promedio_solo_similitud": avg("recall_sim"),
-        "precision_promedio_con_grafo": avg("precision_expanded"),
-        "recall_promedio_con_grafo": avg("recall_expanded"),
+        "n_questions": n,
+        "average_precision_only_similarity": avg("precision_sim"),
+        "average_recall_only_similarity": avg("recall_sim"),
+        "average_precision_with_graph": avg("precision_expanded"),
+        "average_recall_with_graph": avg("recall_expanded"),
         "exact_match_rate": round(exact_matches / n, 3),
-        "latencia_promedio_ms": avg("latency_ms"),
+        "average_latency_ms": avg("latency_ms"),
     }
     return summary
 
@@ -95,25 +94,25 @@ if __name__ == "__main__":
     summary = summarize(results)
 
     print("=" * 70)
-    print("RESULTADOS POR PREGUNTA")
+    print("RESULTS BY QUESTION")
     print("=" * 70)
     for r in results:
         print(f"\n❓ {r['question']}")
-        print(f"   Esperado:        {r['expected']}")
-        print(f"   Solo similitud:  {r['sim_only']}  (P={r['precision_sim']}, R={r['recall_sim']})")
-        print(f"   Con expansión:   {r['expanded']}  (P={r['precision_expanded']}, R={r['recall_expanded']})")
-        print(f"   Exact match: {'✅' if r['exact_match_expanded'] else '❌'}  |  Latencia: {r['latency_ms']} ms")
+        print(f"   Expected:        {r['expected']}")
+        print(f"   Similarity only: {r['sim_only']}  (P={r['precision_sim']}, R={r['recall_sim']})")
+        print(f"   With expansion:  {r['expanded']}  (P={r['precision_expanded']}, R={r['recall_expanded']})")
+        print(f"   Exact match: {'✅' if r['exact_match_expanded'] else '❌'}  |  Latency: {r['latency_ms']} ms")
 
-    metricas_path = resolve_results_path("metricas.txt")
-    with open(metricas_path, "a", encoding="utf-8") as f:
+    metrics_path = resolve_results_path("metricas.txt")
+    with open(metrics_path, "a", encoding="utf-8") as f:
         f.write(f"\n{'=' * 60}\n")
-        f.write(f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-        f.write("Resumen de resultados de evaluación:\n")
+        f.write(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write("Summary of evaluation results:\n")
         for k, v in summary.items():
             f.write(f"  {k}: {v}\n")
 
     print("\n" + "=" * 70)
-    print("RESUMEN GENERAL")
+    print("OVERALL SUMMARY")
     print("=" * 70)
     for k, v in summary.items():
         print(f"  {k}: {v}")
@@ -121,4 +120,4 @@ if __name__ == "__main__":
     results_path = resolve_results_path("eval_results.json")
     with open(results_path, "w", encoding="utf-8") as f:
         json.dump({"results": results, "summary": summary}, f, indent=2, ensure_ascii=False)
-    print(f"\nResultados guardados -> {results_path}")
+    print(f"\nResults saved -> {results_path}")

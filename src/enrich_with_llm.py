@@ -1,18 +1,15 @@
 """
-Etapa 2 (real): Enriquecimiento semántico vía LLM.
+Stage 2 (real): semantic enrichment via LLM.
 
-Reemplaza el diccionario DESCRIPTIONS escrito a mano por generación
-real: para cada tabla, le pasamos a Claude su nombre, columnas, tipos,
-y una muestra de filas, y le pedimos una descripción de la tabla,
-descripciones de columnas ambiguas, y preguntas de ejemplo que un
-usuario típico haría sobre esa tabla — usando tool use para forzar
-un schema de salida confiable.
+This replaces the handwritten DESCRIPTIONS dictionary with real generation: for each table, we pass
+Claude the table name, columns, types, and a sample of rows, then ask for a table description,
+ambiguous column descriptions, and example questions a typical user would ask — using tool use to
+force a reliable output schema.
 
-El resultado sigue entrando a estado `pending_review`, tal como en la
-versión manual — la diferencia es quién lo genera, no el flujo de
-aprobación.
+The result still enters the `pending_review` state just like the manual version — the difference is
+who generates it, not the approval flow.
 
-Requiere: pip install anthropic
+Requires: pip install anthropic
           export ANTHROPIC_API_KEY=...
 """
 import sqlite3
@@ -28,27 +25,27 @@ if __package__ in (None, ""):
 from anthropic import Anthropic
 from src.project_paths import resolve_artifact_path, resolve_db_path
 
-client = Anthropic()  
+client = Anthropic()
 
 ENRICH_TOOL = {
-    "name": "describir_tabla",
-    "description": "Genera la descripción semántica de una tabla de base de datos",
+    "name": "describe_table",
+    "description": "Generates the semantic description of a database table",
     "input_schema": {
         "type": "object",
         "properties": {
             "table_description": {
                 "type": "string",
-                "description": "1-2 frases explicando qué representa esta tabla. Si se confunde fácilmente con otra tabla del mismo dominio, menciona EXPLICITAMENTE qué la distingue."
+                "description": "1-2 sentences explaining what this table represents. If it is easily confused with another table in the same domain, mention EXPLICITLY what distinguishes it."
             },
             "column_descriptions": {
                 "type": "object",
-                "description": "Mapa de nombre_de_columna -> descripción corta, SOLO para columnas cuyo propósito no sea obvio por el nombre (ids, flags, fechas ambiguas, campos técnicos).",
+                "description": "Map of column_name -> short description, only for columns whose purpose is not obvious from the name (IDs, flags, ambiguous dates, technical fields).",
                 "additionalProperties": {"type": "string"}
             },
             "example_questions": {
                 "type": "array",
                 "items": {"type": "string"},
-                "description": "2-3 preguntas en lenguaje natural, en español, que un usuario de negocio típico haría y que requerirían esta tabla para responderse."
+                "description": "2-3 natural-language questions a typical business user would ask and that would require this table to answer."
             }
         },
         "required": ["table_description", "column_descriptions", "example_questions"]
@@ -67,26 +64,24 @@ def get_sample_rows(db_path: str, table: str, n: int = 3) -> list:
 
 
 def enrich_table_with_llm(table_name: str, table_info: dict, sample_rows: list) -> dict:
-    prompt = f"""Analiza esta tabla de una base de datos y genera su documentación semántica.
+    prompt = f"""Analyze this database table and generate its semantic documentation.
 
-Tabla: {table_name}
-Columnas: {json.dumps(table_info['columns'], ensure_ascii=False)}
-Relaciones (foreign keys): {json.dumps(table_info['foreign_keys'], ensure_ascii=False)}
-Muestra de filas reales:
+Table: {table_name}
+Columns: {json.dumps(table_info['columns'], ensure_ascii=False)}
+Relationships (foreign keys): {json.dumps(table_info['foreign_keys'], ensure_ascii=False)}
+Sample rows:
 {json.dumps(sample_rows, ensure_ascii=False, indent=2)}
 
-IMPORTANTE: si esta tabla podría confundirse con otra tabla similar del
-mismo dominio (por ejemplo, dos tablas que ambas mencionan "cliente" o
-"factura"), incluye en table_description qué la distingue explícitamente.
-No repitas la misma palabra clave en las example_questions de tablas
-distintas si esa palabra no es realmente específica de esta tabla —
-evita frases genéricas que podrían aplicar a cualquier tabla del dominio."""
+IMPORTANT: if this table could be confused with a similar table in the same domain, include in
+`table_description` what clearly distinguishes it.
+Do not repeat the same keyword in example_questions for different tables unless it is genuinely
+specific to that table — avoid generic phrases that could apply to any table in the domain."""
 
     response = client.messages.create(
         model="claude-sonnet-5",
         max_tokens=1000,
         tools=[ENRICH_TOOL],
-        tool_choice={"type": "tool", "name": "describir_tabla"},
+        tool_choice={"type": "tool", "name": "describe_table"},
         messages=[{"role": "user", "content": prompt}],
     )
 
@@ -94,12 +89,12 @@ evita frases genéricas que podrían aplicar a cualquier tabla del dominio."""
         if block.type == "tool_use":
             return block.input
 
-    raise RuntimeError(f"El modelo no devolvió la tool use esperada para {table_name}")
+    raise RuntimeError(f"The model did not return the expected tool call for {table_name}")
 
 
 ENRICH_ALL_TOOL = {
-    "name": "describir_esquema_completo",
-    "description": "Genera la descripción semántica de todas las tablas de un esquema a la vez, permitiendo distinguir tablas que se confunden entre sí",
+    "name": "describe_full_schema",
+    "description": "Generates the semantic description of all tables in a schema at once, allowing tables that could be confused with each other to be differentiated",
     "input_schema": {
         "type": "object",
         "properties": {
@@ -111,7 +106,7 @@ ENRICH_ALL_TOOL = {
                         "table_name": {"type": "string"},
                         "table_description": {
                             "type": "string",
-                            "description": "1-2 frases explicando qué representa esta tabla. Si se confunde fácilmente con OTRA tabla de este mismo esquema, menciona EXPLICITAMENTE qué la distingue (ej. 'a diferencia de X, esta tabla...')."
+                            "description": "1-2 sentences explaining what this table represents. If it is easily confused with ANOTHER table in this same schema, explicitly mention what distinguishes it (e.g. 'unlike X, this table...')."
                         },
                         "column_descriptions": {
                             "type": "object",
@@ -120,7 +115,7 @@ ENRICH_ALL_TOOL = {
                         "example_questions": {
                             "type": "array",
                             "items": {"type": "string"},
-                            "description": "2-3 preguntas en español que un usuario haría y que requieren ESTA tabla específicamente."
+                            "description": "2-3 questions a user would ask and that specifically require THIS table."
                         }
                     },
                     "required": ["table_name", "table_description", "column_descriptions", "example_questions"]
@@ -134,11 +129,9 @@ ENRICH_ALL_TOOL = {
 
 def enrich_all_at_once(catalog: dict, db_path: str) -> dict:
     """
-    Una sola llamada al LLM con el esquema COMPLETO, para que el modelo
-    pueda ver todas las tablas a la vez y escribir descripciones que se
-    distingan activamente entre sí — algo imposible si cada tabla se
-    describe en aislamiento (el problema que causó el resultado bajo
-    de la versión anterior de este script).
+    A single LLM call with the full schema, so the model can see all tables at once and write
+    descriptions that actively distinguish one another — something impossible when each table is
+    described in isolation (the problem that caused the weak result in the previous version of this script).
     """
     schema_overview = []
     for table_name, info in catalog.items():
@@ -150,29 +143,24 @@ def enrich_all_at_once(catalog: dict, db_path: str) -> dict:
             "sample_rows": samples,
         })
 
-    prompt = f"""Analiza este esquema de base de datos COMPLETO y genera la
-documentación semántica de cada tabla.
+    prompt = f"""Analyze this complete database schema and generate the semantic
+documentation for each table.
 
-Esquema completo ({len(schema_overview)} tablas):
+Full schema ({len(schema_overview)} tables):
 {json.dumps(schema_overview, ensure_ascii=False, indent=2)}
 
-INSTRUCCIONES CRÍTICAS:
-- Tienes visibilidad de TODAS las tablas al mismo tiempo. Úsala: si dos
-  tablas podrían confundirse entre sí (ej. ambas mencionan "cliente" o
-  "factura" o "canción"), la descripción de CADA UNA debe decir
-  explícitamente qué la distingue de la otra.
-- Las preguntas de ejemplo de una tabla NO deben usar palabras clave que
-  también aparezcan igual de bien en preguntas de ejemplo de otra tabla,
-  a menos que esa palabra sea realmente exclusiva de esta tabla en el
-  dominio. Evita frases genéricas del dominio completo.
-- Genera la salida para las {len(schema_overview)} tablas, en el mismo
-  orden en que aparecen arriba."""
+CRITICAL INSTRUCTIONS:
+- You have visibility of ALL tables at once. Use it: if two tables could be confused with each other,
+  the description of EACH ONE must explicitly explain what distinguishes it from the other.
+- The example questions for one table must not reuse keywords that appear equally well in another
+  table's example questions unless that word is truly unique to this table in the domain.
+- Generate output for the {len(schema_overview)} tables in the same order they appear above."""
 
     response = client.messages.create(
         model="claude-sonnet-5",
         max_tokens=4000,
         tools=[ENRICH_ALL_TOOL],
-        tool_choice={"type": "tool", "name": "describir_esquema_completo"},
+        tool_choice={"type": "tool", "name": "describe_full_schema"},
         messages=[{"role": "user", "content": prompt}],
     )
 
@@ -181,12 +169,12 @@ INSTRUCCIONES CRÍTICAS:
             results_by_table = {t["table_name"]: t for t in block.input["tables"]}
             break
     else:
-        raise RuntimeError("El modelo no devolvió la tool use esperada")
+        raise RuntimeError("The model did not return the expected tool call")
 
     for table_name, table_info in catalog.items():
         result = results_by_table.get(table_name)
         if not result:
-            print(f"  ADVERTENCIA: el LLM no generó descripción para {table_name}")
+            print(f"  WARNING: the LLM did not generate a description for {table_name}")
             continue
         table_info["description"] = result["table_description"]
         table_info["example_questions"] = result["example_questions"]
@@ -216,18 +204,18 @@ if __name__ == "__main__":
     catalog = enrich_all_at_once(catalog, str(db_path))
 
     print("\n" + "=" * 70)
-    print("DESCRIPCIONES GENERADAS (pending_review) — revísalas antes de aprobar")
+    print("GENERATED DESCRIPTIONS (pending_review) — review them before approving")
     print("=" * 70)
     for t, info in catalog.items():
         print(f"\n[{info['status']}] {t}")
-        print(f"  Descripción: {info['description']}")
-        print(f"  Preguntas de ejemplo: {info['example_questions']}")
+        print(f"  Description: {info['description']}")
+        print(f"  Example questions: {info['example_questions']}")
 
-    respuesta = input("\n¿Aprobar todas y guardar? (s/n): ")
-    if respuesta.lower() == "s":
+    response = input("\nApprove all and save? (y/n): ")
+    if response.lower() == "y":
         catalog = approve_all(catalog)
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(catalog, f, indent=2, ensure_ascii=False)
-        print(f"Guardado -> {output_path}")
+        print(f"Saved -> {output_path}")
     else:
-        print("No se guardó. Ajusta el prompt y vuelve a correr.")
+        print("Not saved. Adjust the prompt and rerun.")

@@ -1,18 +1,18 @@
 """
-Etapa 4 (indexado) + Etapa 5 (Explorador).
+Stage 4 (indexed) + Stage 5 (Explorer).
 
-Combina tres señales de similitud por tabla, tomando el máximo entre ellas:
-  1. Embedding de la tabla completa (nombre + descripción + columnas)
-  2. Embedding por columna individual (para preguntas específicas de un campo)
-  3. Embedding de preguntas de ejemplo (pregunta-contra-pregunta suele
-     dar mejor similitud que pregunta-contra-descripción)
+Combines three similarity signals per table by taking the maximum of each:
+  1. Full-table embedding (table name + description + columns)
+  2. Individual-column embedding (useful for field-specific questions)
+  3. Example-question embedding (question-to-question often works better than
+     question-to-description)
 
-Top-k variable: en vez de devolver siempre exactamente `top_k` tablas,
-corta por umbral absoluto y relativo al mejor score, para no forzar
-tablas de relleno cuando la pregunta solo necesita 1-2.
+Variable top-k: instead of always returning exactly `top_k` tables,
+we cut by absolute and relative thresholds relative to the best score to avoid
+forcing filler tables when the question only needs 1-2.
 
-Expansión por grafo filtrada: un vecino solo se agrega si su propio
-score de similitud supera `neighbor_min_score`, no incondicionalmente.
+Filtered graph expansion: a neighbor is added only when its own similarity score
+exceeds `neighbor_min_score`, not unconditionally.
 """
 import pickle
 import networkx as nx
@@ -22,17 +22,17 @@ from src.build_graph import node_to_text
 from src.project_paths import resolve_graph_path
 
 
-class Explorador:
+class Explorer:
     def __init__(self, graph: nx.DiGraph, model_name: str = "paraphrase-multilingual-MiniLM-L12-v2"):
         self.graph = graph
         self.table_names = list(graph.nodes())
         self.model = SentenceTransformer(model_name)
 
-        # Señal 1: tabla completa
+        # Signal 1: full table
         table_texts = [node_to_text(t, graph.nodes[t]) for t in self.table_names]
         self.table_embeddings = self.model.encode(table_texts, normalize_embeddings=True)
 
-        # Señal 2: por columna
+        # Signal 2: per-column
         self.col_texts, self.col_to_table = [], []
         for t in self.table_names:
             for col in graph.nodes[t]["columns"]:
@@ -45,7 +45,7 @@ class Explorador:
             if self.col_texts else None
         )
 
-        # Señal 3: preguntas de ejemplo
+        # Signal 3: example questions
         self.example_texts, self.example_to_table = [], []
         for t in self.table_names:
             for eq in graph.nodes[t].get("example_questions", []):
@@ -82,7 +82,7 @@ class Explorador:
         relative_gap: float = 0.85,
         expand_hops: int = 1,
         neighbor_relative_gap: float = 0.7,
-        neighbor_floor_ceiling: float = 0.5,  # nuevo
+        neighbor_floor_ceiling: float = 0.5,
     ) -> dict:
         scores = self._combined_scores(question)
         ranked = sorted(scores.items(), key=lambda x: -x[1])
@@ -97,8 +97,8 @@ class Explorador:
             ]
 
         best_score = ranked[0][1] if ranked else 0
-        # el techo evita que el umbral se vuelva imposiblemente estricto
-        # cuando la tabla principal tiene un score muy alto de confianza
+        # The ceiling prevents the threshold from becoming unrealistically strict when the
+        # main table has a very high confidence score.
         neighbor_floor = min(best_score * neighbor_relative_gap, neighbor_floor_ceiling)
 
         expanded = set(top_tables)
@@ -107,7 +107,6 @@ class Explorador:
                 for neighbor in list(self.graph.successors(table)) + list(self.graph.predecessors(table)):
                     if scores.get(neighbor, 0) >= neighbor_floor:
                         expanded.add(neighbor)
-        
 
         context_package = {
             "question": question,
@@ -129,18 +128,21 @@ class Explorador:
         return context_package
 
 
+Explorador = Explorer
+
+
 if __name__ == "__main__":
     graph_path = resolve_graph_path()
     with open(graph_path, "rb") as f:
         graph = pickle.load(f)
 
-    explorador = Explorador(graph)
+    explorer = Explorer(graph)
     for q in [
-        "¿Cuáles son los 5 géneros musicales con más canciones vendidas?",
-        "¿Qué empleado tiene más clientes asignados?",
-        "Lista las canciones de la playlist más grande",
+        "Which are the top 5 music genres by songs sold?",
+        "Which employee has the most assigned customers?",
+        "List songs from the largest playlist",
     ]:
-        ctx = explorador.retrieve(q)
+        ctx = explorer.retrieve(q)
         print(f"\n{q}")
-        print(f"  similitud: {ctx['retrieved_by_similarity']}")
-        print(f"  expandido: {ctx['expanded_with_graph']}")
+        print(f"  similarity: {ctx['retrieved_by_similarity']}")
+        print(f"  expanded: {ctx['expanded_with_graph']}")

@@ -1,7 +1,7 @@
 """
-Etapa 1: Extracción del catálogo técnico.
-Determinístico — no usa LLM. Lee directamente los metadatos que SQLite
-ya conoce sobre sí mismo (PRAGMA table_info, foreign_key_list).
+Stage 1: technical catalog extraction.
+Deterministic — does not use an LLM. It reads the metadata SQLite already exposes
+(PRAGMA table_info, foreign_key_list).
 """
 import sqlite3
 import json
@@ -57,7 +57,7 @@ def extract_catalog(db_path: str) -> dict:
             "columns": columns,
             "foreign_keys": fks,
             "row_count": row_count,
-            "description": None,  # se llena en la etapa de enriquecimiento
+            "description": None,
         }
 
     conn.close()
@@ -70,6 +70,6 @@ if __name__ == "__main__":
     catalog = extract_catalog(str(db_path))
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(catalog, f, indent=2, ensure_ascii=False)
-    print(f"Catálogo extraído: {len(catalog)} tablas -> {output_path}")
+    print(f"Catalog extracted: {len(catalog)} tables -> {output_path}")
     for t, info in catalog.items():
-        print(f"  {t}: {len(info['columns'])} columnas, {len(info['foreign_keys'])} FKs, {info['row_count']} filas")
+        print(f"  {t}: {len(info['columns'])} columns, {len(info['foreign_keys'])} FKs, {info['row_count']} rows")

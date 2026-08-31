@@ -1,16 +1,14 @@
 """
-Etapa 2: Enriquecimiento semántico.
+Stage 2: semantic enrichment.
 
-En producción, este paso llama a un LLM por cada tabla/columna ambigua,
-usando su nombre, tipo y una muestra de filas anonimizadas, y el resultado
-entra a una cola `pending_review` hasta que un humano lo aprueba (ver la
-propuesta de arquitectura, sección "Capa semántica ligera").
+In production, this step calls an LLM for each ambiguous table/column, using the name,
+type, and a sample of anonymized rows. The result enters a `pending_review` queue until a
+human approves it (see the architecture proposal, section "Light semantic layer").
 
-Para este MVP, con solo 11 tablas, las descripciones fueron escritas
-razonando directamente sobre el esquema y una muestra de filas real
-(ver conversación) — cumpliendo el mismo rol que la llamada a LLM
-cumpliría en producción. Quedan marcadas como pending_review y se
-"aprueban" en la función approve_all() para simular ese paso del flujo.
+For this MVP, with only 11 tables, the descriptions were written by reasoning directly from
+the schema and a real sample of rows (see the conversation) — fulfilling the same role the
+LLM call would play in production. They are marked as `pending_review` and then "approved"
+through `approve_all()` to simulate that flow step.
 """
 import json
 import sys
@@ -23,112 +21,112 @@ if __package__ in (None, ""):
 
 from src.project_paths import resolve_artifact_path
 
-# Descripciones semánticas por tabla y por columna ambigua.
-# Este diccionario es el output que en producción generaría el agente
-# Enriquecedor (LLM) tabla por tabla.
+# Semantic descriptions by table and ambiguous column.
+# This dictionary is the output that the Enricher agent (LLM) would generate in production,
+# one table at a time.
 DESCRIPTIONS = {
     "Artist": {
-        "table": "Artistas musicales o bandas. Solo el nombre del artista, sin sus álbumes ni canciones directamente.",
+        "table": "Musical artists or bands. Only the artist name, without albums or songs directly.",
         "columns": {},
         "example_questions": [
-            "¿Qué artistas tienen más de 5 álbumes?",
-            "¿Cuáles son los artistas más populares?",
+            "Which artists have more than 5 albums?",
+            "Which artists are the most popular?",
         ],
     },
     "Album": {
-        "table": "Álbumes musicales, cada uno pertenece a un solo artista. No contiene las canciones en sí, solo el título del álbum.",
+        "table": "Music albums, each belonging to a single artist. It does not contain songs themselves, only the album title.",
         "columns": {},
         "example_questions": [
-            "¿Cuántos álbumes tiene cada artista?",
-            "¿Cuál es el álbum con más canciones?",
+            "How many albums does each artist have?",
+            "Which album has the most songs?",
         ],
     },
     "Track": {
-        "table": "Canciones individuales disponibles para la venta, cada una pertenece a un álbum, tiene un género y un formato de audio.",
+        "table": "Individual songs available for sale, each belonging to an album, with a genre and audio format.",
         "columns": {
-            "Milliseconds": "Duración de la canción en milisegundos",
-            "UnitPrice": "Precio de venta de la canción individual",
-            "Composer": "Nombre del compositor de la canción",
+            "Milliseconds": "Song duration in milliseconds",
+            "UnitPrice": "Sale price of the individual song",
+            "Composer": "Name of the song's composer",
         },
         "example_questions": [
-            "¿Cuáles son las canciones más largas en duración?",
-            "¿Cuál es la canción más cara?",
-            "¿Quién compuso esta canción?",
+            "Which songs are the longest?",
+            "Which song is the most expensive?",
+            "Who composed this song?",
         ],
     },
     "Genre": {
-        "table": "Géneros musicales (Rock, Jazz, Classical, etc.), usados para clasificar canciones. No contiene información de ventas.",
+        "table": "Music genres (Rock, Jazz, Classical, etc.), used to classify songs. It does not contain sales information.",
         "columns": {},
         "example_questions": [
-            "¿Cuáles son los géneros más populares?",
-            "¿Cuántas canciones hay de cada género?",
+            "Which genres are the most popular?",
+            "How many songs are there in each genre?",
         ],
     },
     "MediaType": {
-        "table": "Formato técnico del archivo de audio de una canción (MPEG, AAC, etc.), no tiene relación con el precio ni las ventas.",
+        "table": "Technical audio file format for a song (MPEG, AAC, etc.), not related to price or sales.",
         "columns": {},
         "example_questions": [
-            "¿Cuántas canciones tiene cada tipo de formato de audio?",
-            "¿Qué formatos de archivo se usan?",
+            "How many songs are there for each audio format type?",
+            "Which file formats are used?",
         ],
     },
     "Playlist": {
-        "table": "Listas de reproducción creadas por usuarios, agrupan canciones. Solo el nombre de la lista, no las canciones que contiene.",
+        "table": "User-created playlists that group songs. Only the playlist name, not the songs it contains.",
         "columns": {},
         "example_questions": [
-            "¿Cuántas playlists existen?",
-            "¿Cuál es el nombre de cada lista de reproducción?",
+            "How many playlists exist?",
+            "What is the name of each playlist?",
         ],
     },
     "PlaylistTrack": {
-        "table": "Tabla de unión que asocia canciones con listas de reproducción (relación muchos a muchos entre Playlist y Track). Necesaria para saber qué canciones contiene cada playlist.",
+        "table": "Join table that associates songs with playlists (many-to-many relationship between Playlist and Track). Needed to know which songs each playlist contains.",
         "columns": {},
         "example_questions": [
-            "Lista las canciones de la playlist más grande",
-            "¿En cuántas playlists aparece esta canción?",
+            "List the songs from the largest playlist",
+            "How many playlists include this song?",
         ],
     },
     "Customer": {
-        "table": "Clientes externos que compran música (NO son empleados de la empresa). Incluye datos de contacto y el empleado de soporte asignado.",
+        "table": "External customers who buy music (they are not company employees). Includes contact details and the assigned support employee.",
         "columns": {
-            "SupportRepId": "Empleado de soporte asignado a este cliente",
+            "SupportRepId": "Support employee assigned to this customer",
         },
         "example_questions": [
-            "¿Cuál es el cliente que más ha gastado en total?",
-            "¿En qué país viven más clientes?",
+            "Which customer has spent the most in total?",
+            "In which country do most customers live?",
         ],
     },
     "Employee": {
-        "table": "Empleados internos de la empresa (NO son clientes). Incluye representantes de soporte y su jerarquía de jefes directos.",
+        "table": "Internal company employees (not customers). Includes support representatives and their reporting hierarchy.",
         "columns": {
-            "ReportsTo": "Id del empleado que es jefe directo de este empleado (jerarquía interna)",
-            "Title": "Puesto o cargo del empleado",
+            "ReportsTo": "Employee ID of the direct manager for this employee",
+            "Title": "Employee title or role",
         },
         "example_questions": [
-            "¿Qué empleado tiene más clientes asignados?",
-            "¿Quién es el jefe directo de cada empleado?",
+            "Which employee has the most assigned customers?",
+            "Who is the direct manager of each employee?",
         ],
     },
     "Invoice": {
-        "table": "Facturas de compra generadas por un cliente, con el monto TOTAL y la fecha. No incluye el detalle de qué canciones se compraron (eso está en InvoiceLine).",
+        "table": "Purchase invoices generated by a customer, with TOTAL amount and date. It does not include the details of which songs were purchased (that is in InvoiceLine).",
         "columns": {
-            "Total": "Monto total de la factura",
+            "Total": "Total invoice amount",
         },
         "example_questions": [
-            "¿Cuál es el total facturado por país?",
-            "¿Cuántas facturas se generaron el mes pasado?",
+            "What is the total invoiced amount by country?",
+            "How many invoices were generated last month?",
         ],
     },
     "InvoiceLine": {
-        "table": "Detalle línea por línea de qué canción específica se vendió, a qué precio y en qué cantidad, dentro de una factura. Es la tabla clave para preguntas sobre canciones vendidas, ingresos por producto o ventas por género.",
+        "table": "Line-by-line detail of which specific song was sold, at what price, and in what quantity, within an invoice. This is the key table for questions about sold songs, product revenue, or sales by genre.",
         "columns": {
-            "UnitPrice": "Precio unitario de la canción en el momento de la compra",
-            "Quantity": "Cantidad comprada de esa canción en esa línea",
+            "UnitPrice": "Unit price of the song at the time of purchase",
+            "Quantity": "Quantity purchased for that song in that line",
         },
         "example_questions": [
-            "¿Cuáles son las canciones más vendidas?",
-            "¿Qué género tiene más canciones vendidas?",
-            "¿Cuántas unidades se vendieron de cada producto?",
+            "Which songs are the best sellers?",
+            "Which genre has the most songs sold?",
+            "How many units were sold of each product?",
         ],
     },
 }
@@ -137,7 +135,7 @@ DESCRIPTIONS = {
 def enrich(catalog: dict) -> dict:
     for table_name, table_info in catalog.items():
         desc = DESCRIPTIONS.get(table_name, {})
-        table_info["description"] = desc.get("table", f"Tabla {table_name} (sin descripción generada)")
+        table_info["description"] = desc.get("table", f"Table {table_name} (without generated description)")
         table_info["example_questions"] = desc.get("example_questions", [])
         table_info["status"] = "pending_review"
         col_descs = desc.get("columns", {})
@@ -148,7 +146,7 @@ def enrich(catalog: dict) -> dict:
 
 
 def approve_all(catalog: dict) -> dict:
-    """Simula la aprobación humana de la cola de revisión (paso de PR/merge)."""
+    """Simulates human approval of the review queue (PR/merge step)."""
     for table_info in catalog.values():
         table_info["status"] = "active"
     return catalog
@@ -162,7 +160,7 @@ if __name__ == "__main__":
         catalog = json.load(f)
 
     catalog = enrich(catalog)
-    print("Descripciones generadas (pending_review):")
+    print("Generated descriptions (pending_review):")
     for t, info in catalog.items():
         print(f"  [{info['status']}] {t}: {info['description']}")
 
@@ -170,4 +168,4 @@ if __name__ == "__main__":
 
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(catalog, f, indent=2, ensure_ascii=False)
-    print(f"\nCatálogo enriquecido y aprobado -> {output_path}")
+    print(f"\nCatalog enriched and approved -> {output_path}")

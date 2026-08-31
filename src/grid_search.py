@@ -1,12 +1,11 @@
 """
-Grid search sobre los hiperparámetros de retrieve():
+Grid search over the retrieve() hyperparameters:
   min_score, relative_gap, neighbor_relative_gap, neighbor_floor_ceiling
 
-En vez de ajustar uno a la vez a mano (lo que ya demostró dar resultados
-inconsistentes por la interacción entre parámetros), probamos todas las
-combinaciones razonables y reportamos las mejores según exact_match_rate
-y F1 (balance entre precision y recall) sobre el set de expansión, que
-es lo que realmente se le entrega al Generador.
+Instead of tuning one value at a time by hand (which already showed inconsistent behavior because
+of parameter interactions), we test all reasonable combinations and report the best ones according
+to exact_match_rate and F1 (precision/recall balance) over the expansion set, which is what is
+actually passed to the SQL generator.
 """
 import os
 import sys
@@ -74,7 +73,7 @@ def run_grid_search():
 
     keys = list(grid.keys())
     combos = list(itertools.product(*grid.values()))
-    print(f"Probando {len(combos)} combinaciones...")
+    print(f"Testing {len(combos)} combinations...")
 
     results = []
     for combo in combos:
@@ -82,10 +81,10 @@ def run_grid_search():
         result = evaluate_config(explorador, params)
         results.append(result)
 
-    # Ordenar por F1 primero (balance precision/recall), luego exact_match como desempate
+    # Sort by F1 first (precision/recall balance), then exact_match as a tiebreaker.
     results.sort(key=lambda r: (r["f1"], r["exact_match_rate"]), reverse=True)
 
-    print("\nTop 10 configuraciones por F1:")
+    print("\nTop 10 configurations by F1:")
     print(f"{'F1':>6} {'P':>6} {'R':>6} {'Exact%':>8}  Params")
     for r in results[:10]:
         print(f"{r['f1']:>6} {r['precision']:>6} {r['recall']:>6} {r['exact_match_rate']*100:>7.1f}%  {r['params']}")

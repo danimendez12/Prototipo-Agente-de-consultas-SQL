@@ -1,9 +1,9 @@
 """
-Set de evaluación con verdad conocida (ground truth) para medir la
-calidad de recuperación del Explorador sobre Chinook.
+Evaluation set with known ground truth (ground truth) to measure the quality of the Explorer's
+retrieval over Chinook.
 
-Cada entrada: pregunta en lenguaje natural + tablas que un humano
-determinó como necesarias para responderla correctamente.
+Each entry: a natural-language question plus the tables a human determined were necessary to
+answer it correctly.
 """
 
 

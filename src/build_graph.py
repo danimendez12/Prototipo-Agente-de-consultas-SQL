@@ -1,9 +1,9 @@
 """
-Etapa 3: Construcción del grafo de navegación.
-Nodos = tablas (con su descripción y columnas enriquecidas).
-Aristas = relaciones de foreign key, con cardinalidad many_to_one.
-Usamos networkx en memoria, tal como se definió en la arquitectura
-para esquemas de tamaño moderado (sin necesidad de un motor de grafos dedicado).
+Stage 3: navigation graph construction.
+Nodes = tables (with their enriched descriptions and columns).
+Edges = foreign-key relationships with cardinality many_to_one.
+We use networkx in memory, as defined in the architecture for moderate-sized schemas
+(without needing a dedicated graph database).
 """
 import json
 import sys
@@ -21,11 +21,11 @@ from src.project_paths import resolve_artifact_path
 
 def build_graph(catalog: dict) -> nx.DiGraph:
     g = nx.DiGraph()
-    print(f"Construyendo grafo a partir del catálogo (n={len(catalog)} tablas)...")
+    print(f"Building graph from catalog (n={len(catalog)} tables)...")
 
     for table_name, info in catalog.items():
         if info["status"] != "active":
-            continue  # solo nodos aprobados entran al grafo activo
+            continue
         g.add_node(
             table_name,
             description=info["description"],
@@ -49,12 +49,12 @@ def build_graph(catalog: dict) -> nx.DiGraph:
 
 
 def node_to_text(table_name: str, node_data: dict) -> str:
-    """Concatena nombre + descripción + columnas para indexar (texto plano)."""
+    """Concatenates name + description + columns for indexing (plain text)."""
     col_names = ", ".join(c["name"] for c in node_data["columns"])
     col_descs = " ".join(
         c.get("description", "") for c in node_data["columns"] if c.get("description")
     )
-    return f"{table_name}. {node_data['description']} Columnas: {col_names}. {col_descs}"
+    return f"{table_name}. {node_data['description']} Columns: {col_names}. {col_descs}"
 
 
 if __name__ == "__main__":
@@ -65,11 +65,11 @@ if __name__ == "__main__":
         catalog = json.load(f)
 
     graph = build_graph(catalog)
-    print(f"Grafo construido: {graph.number_of_nodes()} nodos, {graph.number_of_edges()} aristas")
-    print("\nAristas (relaciones):")
+    print(f"Graph built: {graph.number_of_nodes()} nodes, {graph.number_of_edges()} edges")
+    print("\nEdges (relationships):")
     for u, v, data in graph.edges(data=True):
         print(f"  {u} --[{data['via']}]--> {v}")
 
     with open(output_path, "wb") as f:
         pickle.dump(graph, f)
-    print(f"\nGrafo guardado -> {output_path}")
+    print(f"\nGraph saved -> {output_path}")
