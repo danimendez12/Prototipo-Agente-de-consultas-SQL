@@ -1,0 +1,11 @@
+# en docker-compose.yml, dentro de tu servicio pipeline:
+services:
+  pipeline:
+    build: .
+    env_file: .env
+    environment:
+      - PYTHONPATH=/app/src:/app/evaluation
+    volumes:
+      - ./artifacts:/app/artifacts
+      - ./results:/app/results
+      - ./data:/app/data

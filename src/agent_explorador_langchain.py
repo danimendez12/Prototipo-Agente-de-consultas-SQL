@@ -17,14 +17,52 @@ Configuración:
 import json
 import os
 import sys
+import re
 from pathlib import Path
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
+from tenacity import retry, retry_if_exception, wait_exponential, stop_after_attempt
+
 
 if __package__ in (None, ""):
     project_root = Path(__file__).resolve().parent.parent
     if str(project_root) not in sys.path:
         sys.path.insert(0, str(project_root))
+
+
+
+def is_rate_limit_error(exception):
+    return "rate_limit" in str(exception).lower() or "429" in str(exception)
+
+@retry(
+    retry=retry_if_exception(is_rate_limit_error),
+    wait=wait_exponential(multiplier=2, min=2, max=60),
+    stop=stop_after_attempt(5),
+    reraise=True,
+)
+def invoke_with_backoff(llm, messages):
+    return llm.invoke(messages)
+
+def _try_salvage_from_error(error) -> dict | None:
+    """
+    Cuando el modelo envuelve la respuesta correcta en un nombre de tool
+    inventado (ej. 'json'), Groq rechaza la llamada con 400 pero el JSON
+    generado sigue viniendo en el cuerpo del error. Lo recuperamos de ahí
+    en vez de descartar una respuesta que en el fondo era correcta.
+    """
+    text = str(error)
+    match = re.search(r"'failed_generation':\s*'(.*?)'\}$", text, re.DOTALL)
+    if not match:
+        return None
+    try:
+        raw = match.group(1).encode().decode("unicode_escape")
+        payload = json.loads(raw)
+        args = payload.get("arguments", {})
+        if "tablas" in args and "razonamiento" in args:
+            return args
+    except Exception:
+        return None
+    return None
 
 
 def build_llm(provider: str = "groq", model_name: str = "openai/gpt-oss-120b"):
@@ -148,8 +186,7 @@ class AgentExploradorLC:
         self.explorador = explorador
         self.tools = build_tools(explorador)
         self.tools_by_name = {t.name: t for t in self.tools}
-        # tool_choice="required" obliga al modelo a usar SIEMPRE un tool en cada iteración
-        self.llm = build_llm(provider, model_name).bind_tools(self.tools, tool_choice="required")
+        self.llm = build_llm(provider, model_name).bind_tools(self.tools)
         self.max_iterations = max_iterations
 
     def retrieve(self, question: str, verbose: bool = False) -> dict:
@@ -158,7 +195,30 @@ class AgentExploradorLC:
         trace = []
 
         while iterations < self.max_iterations:
-            ai_msg = self.llm.invoke(messages)
+            try:
+                ai_msg = invoke_with_backoff(self.llm, messages)
+            except Exception as e:
+                salvaged = _try_salvage_from_error(e)
+                if salvaged:
+                    print(f"  [rescate] el modelo envolvió mal la respuesta, recuperada del error: {salvaged}")
+                    return {
+                        "tables": salvaged["tablas"],
+                        "reasoning": salvaged["razonamiento"],
+                        "tool_calls": iterations,
+                        "trace": trace,
+                    }
+                # no se pudo rescatar: le avisamos al modelo del error exacto y reintentamos
+                messages.append(HumanMessage(
+                    content=(
+                        "Tu última respuesta fue rechazada por usar un nombre de "
+                        "herramienta inválido. Las ÚNICAS herramientas válidas son: "
+                        "buscar_tablas, vecinos_de_tabla, entregar_tablas_finales. "
+                        "No inventes otros nombres como 'json' o 'commentary'. Intenta de nuevo."
+                    )
+                ))
+                iterations += 1
+                continue
+
             messages.append(ai_msg)
 
             if not ai_msg.tool_calls:

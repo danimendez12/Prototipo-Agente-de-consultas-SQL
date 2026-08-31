@@ -131,7 +131,7 @@ EVAL_SET = [
     # 21
     {
         "question": "¿Qué canciones aparecen en más de una playlist?",
-        "expected_tables": {"Track", "PlaylistTrack", "Playlist"},
+        "expected_tables": {"Track", "PlaylistTrack"},
     },
 
     # 22

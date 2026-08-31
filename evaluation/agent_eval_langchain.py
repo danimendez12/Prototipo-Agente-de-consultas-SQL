@@ -61,6 +61,7 @@ def run_agent_eval_lc(n_questions=None, provider="groq", model_name="openai/gpt-
 
     results = []
     for case in eval_subset:
+        time.sleep(5)
         t0 = time.perf_counter()
         try:
             r = agent.retrieve(case["question"])
