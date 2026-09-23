@@ -19,12 +19,10 @@ if __package__ in (None, ""):
         sys.path.insert(0, project_root)
 
 from src.explorador import Explorador
-from src.agent_explorador_langchain import AgentExploradorLC
+from src.agent_explorador_langchain import AgentExplorerLC
 from src.project_paths import resolve_graph_path, resolve_results_path
+from src.services.pricing import estimate_cost
 from evaluation.eval_set import EVAL_SET
-
-PRICE_INPUT_PER_TOK = 0.59 / 1_000_000
-PRICE_OUTPUT_PER_TOK = 0.79 / 1_000_000
 
 
 def precision_recall_f1(retrieved, expected):
@@ -49,7 +47,7 @@ def run_agent_eval_lc(n_questions=None, provider="groq", model_name="openai/gpt-
     with open(graph_path, "rb") as f:
         graph = pickle.load(f)
     explorer = Explorador(graph)
-    agent = AgentExploradorLC(explorer, provider=provider, model_name=model_name)
+    agent = AgentExplorerLC(explorer, provider=provider, model_name=model_name)
 
     import random
 
@@ -57,8 +55,12 @@ def run_agent_eval_lc(n_questions=None, provider="groq", model_name="openai/gpt-
     eval_subset = random.sample(EVAL_SET, min(n, len(EVAL_SET)))
 
     results = []
+    total_cost = 0.0
+    max_session_cost = float(os.getenv("MAX_SESSION_COST_USD", "0") or 0)
     for case in eval_subset:
-        time.sleep(5)
+        if max_session_cost and total_cost >= max_session_cost:
+            print(f"Stopping evaluation: session cost cap ${max_session_cost:.4f} reached.")
+            break
         t0 = time.perf_counter()
         try:
             r = agent.retrieve(case["question"])
@@ -66,7 +68,6 @@ def run_agent_eval_lc(n_questions=None, provider="groq", model_name="openai/gpt-
             print(f"  ERROR in '{case['question'][:50]}...': {e}")
             continue
         latency_ms = (time.perf_counter() - t0) * 1000
-
         retrieved = set(r["tables"])
         expected = case["expected_tables"]
         p, rec, f1 = precision_recall_f1(retrieved, expected)
@@ -87,6 +88,12 @@ def run_agent_eval_lc(n_questions=None, provider="groq", model_name="openai/gpt-
             "tools_sequence": tools_sequence,
             "latency_ms": round(latency_ms, 1),
         })
+        usage = r.get("usage", {})
+        total_cost += estimate_cost(
+            f"{provider}/{model_name}",
+            usage.get("input_tokens", 0),
+            usage.get("output_tokens", 0),
+        )
 
         status = "✅" if retrieved == expected else "❌"
         print(f"{status} {case['question'][:60]:<60} P={p:.2f} R={rec:.2f} F1={f1:.2f}")

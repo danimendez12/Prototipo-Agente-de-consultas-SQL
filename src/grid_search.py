@@ -7,11 +7,13 @@ of parameter interactions), we test all reasonable combinations and report the b
 to exact_match_rate and F1 (precision/recall balance) over the expansion set, which is what is
 actually passed to the SQL generator.
 """
+import json
 import os
 import sys
 import pickle
 import itertools
 import statistics
+import json
 
 if __package__ in (None, ""):
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -19,7 +21,7 @@ if __package__ in (None, ""):
         sys.path.insert(0, project_root)
 
 from src.explorador import Explorador
-from src.project_paths import resolve_graph_path
+from src.project_paths import resolve_graph_path, resolve_artifact_path
 from evaluation.eval_set import EVAL_SET
 
 
@@ -38,16 +40,20 @@ def f1(p: float, r: float) -> float:
     return 2 * p * r / (p + r)
 
 
-def evaluate_config(explorador, params):
+def evaluate_config(explorador, params, scores_by_question=None):
     precisions, recalls, f1s, exact_matches = [], [], [], []
     for case in EVAL_SET:
-        ctx = explorador.retrieve(case["question"], **params)
-        expanded = set(ctx["expanded_with_graph"])
-        p, r = precision_recall(expanded, case["expected_tables"])
+        scores = (
+            scores_by_question[case["question"]]
+            if scores_by_question is not None
+            else explorador._combined_scores(case["question"])
+        )
+        _, expanded = explorador._apply_thresholds(scores, **params)
+        p, r = precision_recall(set(expanded), case["expected_tables"])
         precisions.append(p)
         recalls.append(r)
         f1s.append(f1(p, r))
-        exact_matches.append(expanded == case["expected_tables"])
+        exact_matches.append(set(expanded) == case["expected_tables"])
 
     return {
         "params": params,
@@ -63,6 +69,10 @@ def run_grid_search():
     with open(graph_path, "rb") as f:
         graph = pickle.load(f)
     explorador = Explorador(graph)
+    scores_by_question = {
+        case["question"]: explorador._combined_scores(case["question"])
+        for case in EVAL_SET
+    }
 
     grid = {
         "min_score": [0.35, 0.45, 0.5, 0.55],
@@ -78,16 +88,23 @@ def run_grid_search():
     results = []
     for combo in combos:
         params = dict(zip(keys, combo))
-        result = evaluate_config(explorador, params)
+        result = evaluate_config(explorador, params, scores_by_question)
         results.append(result)
 
-    # Sort by F1 first (precision/recall balance), then exact_match as a tiebreaker.
     results.sort(key=lambda r: (r["f1"], r["exact_match_rate"]), reverse=True)
+    best = results[0]
+    with open("artifacts/best_retrieval_params.json", "w", encoding="utf-8") as f:
+        json.dump(best["params"], f, ensure_ascii=False, indent=2)
 
     print("\nTop 10 configurations by F1:")
     print(f"{'F1':>6} {'P':>6} {'R':>6} {'Exact%':>8}  Params")
     for r in results[:10]:
         print(f"{r['f1']:>6} {r['precision']:>6} {r['recall']:>6} {r['exact_match_rate']*100:>7.1f}%  {r['params']}")
+
+    best_path = resolve_artifact_path("best_retrieval_params.json")
+    with open(best_path, "w", encoding="utf-8") as f:
+        json.dump(results[0]["params"], f, indent=2)
+    print(f"\nBest configuration saved -> {best_path}")
 
     return results
 

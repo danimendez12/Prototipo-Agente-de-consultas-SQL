@@ -25,18 +25,9 @@ if __package__ in (None, ""):
 
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
-from tenacity import retry, retry_if_exception, wait_exponential, stop_after_attempt
-from src.services.agent_services import is_rate_limit_error, invoke_with_backoff, _try_salvage_from_error, build_llm
-
-
-
-
-@retry(
-    retry=retry_if_exception(is_rate_limit_error),
-    wait=wait_exponential(multiplier=2, min=2, max=60),
-    stop=stop_after_attempt(5),
-    reraise=True,
-)
+from src.services.agent_services import invoke_with_backoff, _try_salvage_from_error, build_llm
+from src.services.explorer_tools import search_tables as search_tables_impl
+from src.services.explorer_tools import table_neighbors as table_neighbors_impl
 
 
 
@@ -46,28 +37,12 @@ def build_tools(explorer):
     @tool
     def search_tables(query: str, top_n: int = 6) -> list:
         """Searches the schema for tables semantically related to the query."""
-        scores = explorer._combined_scores(query)
-        ranked = sorted(scores.items(), key=lambda x: -x[1])[:top_n]
-
-        return [
-            {
-                "table": t,
-                "score": round(float(s), 3),
-                "description": explorer.graph.nodes[t]["description"],
-                "columns": list(explorer.graph.nodes[t].get("columns", [])),
-            }
-            for t, s in ranked
-        ]
+        return search_tables_impl(explorer, query, top_n)
 
     @tool
     def table_neighbors(table: str) -> dict:
         """Returns the tables directly connected by a foreign key to a given table."""
-        if table not in explorer.graph:
-            return {"error": f"table '{table}' does not exist in the schema"}
-        neighbors = list(explorer.graph.successors(table)) + list(
-            explorer.graph.predecessors(table)
-        )
-        return {"neighbors": neighbors}
+        return table_neighbors_impl(explorer, table)
 
     @tool
     def deliver_final_tables(tables: list, reasoning: str) -> str:
@@ -132,6 +107,7 @@ class AgentExplorerLC:
         messages = [SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=question)]
         iterations = 0
         trace = []
+        usage_total = {"input_tokens": 0, "output_tokens": 0}
 
         while iterations < self.max_iterations:
             try:
@@ -144,6 +120,7 @@ class AgentExplorerLC:
                         "tables": salvaged["tables"],
                         "reasoning": salvaged["reasoning"],
                         "tool_calls": iterations,
+                        "usage": usage_total,
                         "trace": trace,
                     }
                 messages.append(HumanMessage(
@@ -157,6 +134,9 @@ class AgentExplorerLC:
                 continue
 
             messages.append(ai_msg)
+            usage = getattr(ai_msg, "usage_metadata", {}) or {}
+            usage_total["input_tokens"] += usage.get("input_tokens", 0)
+            usage_total["output_tokens"] += usage.get("output_tokens", 0)
 
             if not ai_msg.tool_calls:
                 break
@@ -171,6 +151,7 @@ class AgentExplorerLC:
                         "tables": tc["args"]["tables"],
                         "reasoning": tc["args"]["reasoning"],
                         "tool_calls": iterations,
+                        "usage": usage_total,
                         "trace": trace,
                     }
 
@@ -200,6 +181,7 @@ class AgentExplorerLC:
             "tables": [],
             "reasoning": "iteration limit reached without a final answer",
             "tool_calls": iterations,
+            "usage": usage_total,
             "trace": trace,
         }
 

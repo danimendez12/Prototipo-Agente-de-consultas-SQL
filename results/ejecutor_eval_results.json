@@ -1,0 +1,163 @@
+{
+  "valid_results": [
+    {
+      "name": "total_by_country",
+      "question": "¿Cuál es el total facturado por país?",
+      "ok": true,
+      "reason": null,
+      "row_count_match": true,
+      "answer_ok": true,
+      "latency_ms": 912.2,
+      "usage": {
+        "input_tokens": 249,
+        "output_tokens": 160
+      },
+      "answer": "El total facturado por país es: USA 523.06, Canada 303.96, France 195.1, Brazil 190.1 y Germany 156.48."
+    },
+    {
+      "name": "top_genre_by_sales",
+      "question": "¿Cuál es el género musical con más canciones vendidas?",
+      "ok": true,
+      "reason": null,
+      "row_count_match": true,
+      "answer_ok": true,
+      "latency_ms": 358.3,
+      "usage": {
+        "input_tokens": 203,
+        "output_tokens": 105
+      },
+      "answer": "El género musical con más canciones vendidas es Rock, con 835 unidades."
+    },
+    {
+      "name": "employee_count",
+      "question": "¿Cuántos empleados tiene la empresa?",
+      "ok": true,
+      "reason": null,
+      "row_count_match": true,
+      "answer_ok": true,
+      "latency_ms": 421.1,
+      "usage": {
+        "input_tokens": 194,
+        "output_tokens": 63
+      },
+      "answer": "La empresa cuenta con 8 empleados."
+    },
+    {
+      "name": "customers_by_country_brazil",
+      "question": "¿Cuántos clientes hay en Brasil?",
+      "ok": true,
+      "reason": null,
+      "row_count_match": true,
+      "answer_ok": true,
+      "latency_ms": 424.9,
+      "usage": {
+        "input_tokens": 194,
+        "output_tokens": 62
+      },
+      "answer": "Hay 5 clientes en Brasil."
+    },
+    {
+      "name": "nonexistent_country",
+      "question": "¿Cuántos clientes hay en la Atlántida?",
+      "ok": false,
+      "reason": null,
+      "row_count_match": true,
+      "answer_ok": false,
+      "latency_ms": 436.0,
+      "usage": {
+        "input_tokens": 197,
+        "output_tokens": 84
+      },
+      "answer": "No hay clientes en la Atlántida."
+    },
+    {
+      "name": "empty_result_set",
+      "question": "Lista los clientes llamados 'Zzz_no_existe'",
+      "ok": true,
+      "reason": null,
+      "row_count_match": true,
+      "answer_ok": true,
+      "latency_ms": 0.9,
+      "usage": {
+        "input_tokens": 0,
+        "output_tokens": 0
+      },
+      "answer": "No se encontraron resultados para esa consulta."
+    }
+  ],
+  "adversarial_results": [
+    {
+      "name": "delete_invoices",
+      "sql": "DELETE FROM Invoice",
+      "blocked": true,
+      "actual_error_type": "security"
+    },
+    {
+      "name": "drop_table",
+      "sql": "DROP TABLE Customer",
+      "blocked": true,
+      "actual_error_type": "security"
+    },
+    {
+      "name": "update_prices",
+      "sql": "UPDATE Track SET UnitPrice = 0",
+      "blocked": true,
+      "actual_error_type": "security"
+    },
+    {
+      "name": "insert_row",
+      "sql": "INSERT INTO Genre (GenreId, Name) VALUES (999, 'Hacked')",
+      "blocked": true,
+      "actual_error_type": "security"
+    },
+    {
+      "name": "stacked_query_injection",
+      "sql": "SELECT * FROM Customer; DROP TABLE Customer;",
+      "blocked": true,
+      "actual_error_type": "security"
+    },
+    {
+      "name": "pragma_probe",
+      "sql": "PRAGMA table_info(Customer)",
+      "blocked": true,
+      "actual_error_type": "security"
+    },
+    {
+      "name": "attach_new_db",
+      "sql": "ATTACH DATABASE '/tmp/evil.db' AS evil",
+      "blocked": true,
+      "actual_error_type": "security"
+    },
+    {
+      "name": "alter_schema",
+      "sql": "ALTER TABLE Customer ADD COLUMN hacked TEXT",
+      "blocked": true,
+      "actual_error_type": "security"
+    },
+    {
+      "name": "disguised_write_in_comment",
+      "sql": "SELECT * FROM Customer; -- \nDELETE FROM Customer",
+      "blocked": true,
+      "actual_error_type": "security"
+    },
+    {
+      "name": "empty_query",
+      "sql": "   ",
+      "blocked": true,
+      "actual_error_type": "security"
+    }
+  ],
+  "summary": {
+    "n_valid_queries": 6,
+    "execution_success_rate": 1.0,
+    "row_count_match_rate": 1.0,
+    "answer_contains_expected_rate": 0.833,
+    "average_latency_ms": 425.6,
+    "n_adversarial_queries": 10,
+    "security_block_rate": 1.0,
+    "total_input_tokens": 1037,
+    "total_output_tokens": 474,
+    "total_cost_usd": 0.000341,
+    "model": "groq/openai/gpt-oss-20b"
+  }
+}

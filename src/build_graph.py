@@ -7,9 +7,11 @@ We use networkx in memory, as defined in the architecture for moderate-sized sch
 """
 import json
 import sys
-import networkx as nx
 import pickle
 from pathlib import Path
+
+import networkx as nx
+from sentence_transformers import SentenceTransformer
 
 if __package__ in (None, ""):
     project_root = Path(__file__).resolve().parent.parent
@@ -55,6 +57,42 @@ def node_to_text(table_name: str, node_data: dict) -> str:
         c.get("description", "") for c in node_data["columns"] if c.get("description")
     )
     return f"{table_name}. {node_data['description']} Columns: {col_names}. {col_descs}"
+
+
+def build_embedding_index(graph: nx.DiGraph, model_name: str = "paraphrase-multilingual-MiniLM-L12-v2") -> dict:
+    """Precompute the schema embeddings so Explorer can reuse them across runs."""
+    model = SentenceTransformer(model_name)
+
+    table_names = list(graph.nodes())
+    table_texts = [node_to_text(t, graph.nodes[t]) for t in table_names]
+    table_embeddings = model.encode(table_texts, normalize_embeddings=True)
+
+    col_texts, col_to_table = [], []
+    for t in table_names:
+        for col in graph.nodes[t]["columns"]:
+            desc = col.get("description", "")
+            text = f"{t}.{col['name']}: {desc}" if desc else f"{t}.{col['name']}"
+            col_texts.append(text)
+            col_to_table.append(t)
+    col_embeddings = model.encode(col_texts, normalize_embeddings=True) if col_texts else None
+
+    example_texts, example_to_table = [], []
+    for t in table_names:
+        for eq in graph.nodes[t].get("example_questions", []):
+            example_texts.append(eq)
+            example_to_table.append(t)
+    example_embeddings = model.encode(example_texts, normalize_embeddings=True) if example_texts else None
+
+    return {
+        "table_names": table_names,
+        "table_embeddings": table_embeddings,
+        "col_texts": col_texts,
+        "col_to_table": col_to_table,
+        "col_embeddings": col_embeddings,
+        "example_texts": example_texts,
+        "example_to_table": example_to_table,
+        "example_embeddings": example_embeddings,
+    }
 
 
 if __name__ == "__main__":

@@ -99,6 +99,8 @@ ipython_config.py
 #   This is especially recommended for binary packages to ensure reproducibility, and is more
 #   commonly ignored for libraries.
 # uv.lock
+artifacts/embeddings.pkl
+artifacts/best_retrieval_params.json
 
 # poetry
 #   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
@@ -156,6 +158,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+artifacts/embeddings.pkl
+artifacts/best_retrieval_params.json
 
 # Spyder project settings
 .spyderproject
