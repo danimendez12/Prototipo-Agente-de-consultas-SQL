@@ -24,10 +24,7 @@ from src.explorador import Explorador
 from src.agent_explorador import AgentExplorador
 from src.project_paths import resolve_graph_path, resolve_results_path
 from evaluation.eval_set import EVAL_SET
-
-# Claude Sonnet 5 pricing: $2/MTok input, $10/MTok output (August 2026)
-PRICE_INPUT_PER_TOK = 2 / 1_000_000
-PRICE_OUTPUT_PER_TOK = 10 / 1_000_000
+from src.services.pricing import estimate_cost
 
 
 def precision_recall(retrieved, expected):
@@ -48,7 +45,11 @@ def run_agent_eval(n_questions=None):
 
     results = []
     total_cost = 0.0
+    max_session_cost = float(os.getenv("MAX_SESSION_COST_USD", "0") or 0)
     for case in eval_subset:
+        if max_session_cost and total_cost >= max_session_cost:
+            print(f"Stopping evaluation: session cost cap ${max_session_cost:.4f} reached.")
+            break
         t0 = time.perf_counter()
         r = agent.retrieve(case["question"])
         latency_ms = (time.perf_counter() - t0) * 1000
@@ -57,9 +58,10 @@ def run_agent_eval(n_questions=None):
         expected = case["expected_tables"]
         p, rec = precision_recall(retrieved, expected)
 
-        cost = (
-            r["usage"]["input_tokens"] * PRICE_INPUT_PER_TOK
-            + r["usage"]["output_tokens"] * PRICE_OUTPUT_PER_TOK
+        cost = estimate_cost(
+            "claude-sonnet-5",
+            r["usage"]["input_tokens"],
+            r["usage"]["output_tokens"],
         )
         total_cost += cost
 

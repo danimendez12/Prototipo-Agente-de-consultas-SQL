@@ -4,3 +4,5 @@ __pycache__/
 .git/
 artifacts/
 results/
+.env
+*.env.local

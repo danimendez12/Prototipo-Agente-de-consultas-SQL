@@ -1,10 +1,17 @@
 import os
 import re
 import json
+from tenacity import retry, retry_if_exception, wait_exponential, stop_after_attempt
 
 def is_rate_limit_error(exception):
     return "rate_limit" in str(exception).lower() or "429" in str(exception)
 
+@retry(
+    retry=retry_if_exception(is_rate_limit_error),
+    wait=wait_exponential(multiplier=2, min=2, max=60),
+    stop=stop_after_attempt(5),
+    reraise=True,
+)
 def invoke_with_backoff(llm, messages):
     return llm.invoke(messages)
 
