@@ -116,6 +116,37 @@ con lo mostrado."""
         return {"success": True, "sql": sql, "error": ""}
 
 
+def generate_sql_from_explorer(user_query, explorer, generator):
+    """Compatibility helper that connects Explorer output to the SQL generator."""
+    exploration = explorer.retrieve(user_query)
+    selected_tables = exploration.get("tables", [])
+    context = exploration.get("context", {})
+    if not context and hasattr(explorer, "retrieve_context"):
+        context = explorer.retrieve_context(user_query)
+    if not context and hasattr(explorer, "explorer"):
+        context = explorer.explorer.retrieve(user_query).get("tables", {})
+    if context:
+        context = {table: context[table] for table in selected_tables if table in context}
+    else:
+        context = selected_tables
+
+    generated = generator.generate_sql_query(
+        user_query,
+        context if context else selected_tables,
+        exploration.get("reasoning", ""),
+    )
+    if isinstance(generated, str):
+        sql = generated
+    else:
+        sql = generated.get("sql", "")
+    return {
+        "tables": selected_tables,
+        "reasoning": exploration.get("reasoning", ""),
+        "sql": sql,
+        "generation": generated,
+    }
+
+
 if __name__ == "__main__":
     agent = SQLQueryGeneratorAgent(provider="groq", model_name="openai/gpt-oss-120b")
     result = agent.generate_sql_query(

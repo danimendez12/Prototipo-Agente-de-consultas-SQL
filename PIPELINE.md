@@ -15,8 +15,8 @@ La arquitectura tiene **7 etapas secuenciales**:
 ## Instalación
 
 ```bash
-# Crear venv
-python3 -m venv .venv
+# Crear venv con Python 3.12 o superior
+/opt/anaconda3/bin/python -m venv .venv
 source .venv/bin/activate
 
 # Instalar dependencias

@@ -26,6 +26,19 @@ La arquitectura se organiza en siete etapas secuenciales, dos de las cuales (con
 
 Las etapas 1-4 se ejecutan una vez y se actualizan de forma incremental cuando cambia el esquema. Las etapas 5-7 ocurren en tiempo real, en cada consulta del usuario.
 
+## Interfaz web
+
+La interfaz permite escribir una pregunta y visualizar el resultado final del
+agente ejecutor después de recorrer Exploración, Generación, Validación y
+Ejecución:
+
+```bash
+streamlit run app.py
+```
+
+Configura el proveedor y los modelos en la barra lateral. Para Groq, exporta
+`GROQ_API_KEY`; para DeepSeek, `DEEPSEEK_API_KEY`. Ollama no requiere API key.
+
 ## 3. Componentes en detalle
 
 ### 3.1 Capa semántica ligera
