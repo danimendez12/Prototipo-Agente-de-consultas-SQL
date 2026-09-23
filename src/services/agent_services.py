@@ -3,9 +3,6 @@ import re
 import json
 from tenacity import retry, retry_if_exception, wait_exponential, stop_after_attempt
 
-from tenacity import retry, retry_if_exception, wait_exponential, stop_after_attempt
-
-
 def is_rate_limit_error(exception):
     return "rate_limit" in str(exception).lower() or "429" in str(exception)
 
