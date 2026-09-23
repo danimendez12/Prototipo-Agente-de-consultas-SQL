@@ -5,8 +5,9 @@ Runs the Explorer against the evaluation set and calculates:
 - Exact match: the retrieved set is identical to the expected set
 - Latency per query
 
-It measures both "retrieved_by_similarity" (TF-IDF only) and "expanded_with_graph"
-(TF-IDF + 1-hop expansion) to show how much graph expansion adds over pure similarity.
+It measures both "retrieved_by_similarity" (sentence-embedding similarity only) and
+"expanded_with_graph" (sentence-embedding similarity plus graph expansion) to show how much
+graph expansion adds over pure similarity.
 """
 import sys
 import os
@@ -47,7 +48,7 @@ def run_eval():
         expected = case["expected_tables"]
 
         t0 = time.perf_counter()
-        ctx = explorer.retrieve(case["question"], top_k=3, expand_hops=1)
+        ctx = explorer.retrieve(case["question"])
         latency_ms = (time.perf_counter() - t0) * 1000
 
         sim_only = set(ctx["retrieved_by_similarity"])

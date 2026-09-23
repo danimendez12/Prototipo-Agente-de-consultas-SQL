@@ -16,6 +16,7 @@ trade-off, not a bug.
 """
 import json
 from anthropic import Anthropic
+from src.services.explorer_tools import search_tables, table_neighbors
 
 client = Anthropic()
 
@@ -98,32 +99,10 @@ class AgentExplorer:
         self.max_tool_calls = max_tool_calls
 
     def _execute_tool(self, name, tool_input):
-        legacy_name_map = {
-            "buscar_tablas": "search_tables",
-            "vecinos_de_tabla": "table_neighbors",
-            "entregar_tablas_finales": "deliver_final_tables",
-        }
-        resolved_name = legacy_name_map.get(name, name)
-
-        if resolved_name == "search_tables":
-            scores = self.explorer._combined_scores(tool_input["query"])
-            ranked = sorted(scores.items(), key=lambda x: -x[1])[: tool_input.get("top_n", 6)]
-            return [
-                {
-                    "table": t,
-                    "score": round(float(s), 3),
-                    "description": self.explorer.graph.nodes[t]["description"],
-                }
-                for t, s in ranked
-            ]
-        elif resolved_name == "table_neighbors":
-            table = tool_input["table"]
-            if table not in self.explorer.graph:
-                return {"error": f"table '{table}' does not exist in the schema"}
-            neighbors = list(self.explorer.graph.successors(table)) + list(
-                self.explorer.graph.predecessors(table)
-            )
-            return {"neighbors": neighbors}
+        if name == "search_tables":
+            return search_tables(self.explorer, tool_input["query"], tool_input.get("top_n", 6))
+        elif name == "table_neighbors":
+            return table_neighbors(self.explorer, tool_input["table"])
         else:
             return {"error": f"unknown tool: {name}"}
 
@@ -152,7 +131,7 @@ class AgentExplorer:
             tool_results = []
 
             for block in tool_use_blocks:
-                if block.name in ("deliver_final_tables", "entregar_tablas_finales"):
+                if block.name == "deliver_final_tables":
                     print("\n[Explorer] Final tables delivered to the SQL generator:")
                     for table in block.input["tables"]:
                         print(f"  - {table}")
@@ -168,14 +147,14 @@ class AgentExplorer:
                 result = self._execute_tool(block.name, block.input)
                 trace.append({"tool": block.name, "input": block.input, "result": result})
 
-                if block.name in ("search_tables", "buscar_tablas"):
+                if block.name == "search_tables":
                     print("\n[Explorer] Tables received from the explorer:")
                     for item in result:
                         print(
                             f"  - {item['table']}: score={item['score']} | "
                             f"description={item['description'][:100]}"
                         )
-                elif block.name in ("table_neighbors", "vecinos_de_tabla"):
+                elif block.name == "table_neighbors":
                     print(f"\n[Explorer] Neighbors of '{block.input['table']}': {result.get('neighbors', [])}")
 
                 if verbose:

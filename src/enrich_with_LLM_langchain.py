@@ -6,7 +6,6 @@ for provider/model selection (Groq, Ollama, etc.) without mixing Anthropic's dir
 LangChain tool-calling interface.
 """
 import json
-import os
 import sqlite3
 import sys
 from pathlib import Path
@@ -19,24 +18,7 @@ if __package__ in (None, ""):
         sys.path.insert(0, str(project_root))
 
 from src.project_paths import resolve_artifact_path, resolve_db_path
-
-
-def build_llm(provider: str = "groq", model_name: str = "openai/gpt-oss-20b"):
-    """Single configuration point for provider/model selection."""
-    if provider == "groq":
-        from langchain_groq import ChatGroq
-        resolved_key = os.getenv("GROQ_API_KEY")
-        if not resolved_key:
-            raise RuntimeError(
-                "Missing GROQ_API_KEY. Export the variable before running this script:\n"
-                "  export GROQ_API_KEY='your_key_here'\n"
-                "  python3 src/enrich_with_LLM_langchain.py"
-            )
-        return ChatGroq(model=model_name, temperature=0, api_key=resolved_key)
-    if provider == "ollama":
-        from langchain_ollama import ChatOllama
-        return ChatOllama(model=model_name, temperature=0)
-    raise ValueError(f"Unknown provider: {provider}")
+from src.services.agent_services import build_llm
 
 
 @tool
